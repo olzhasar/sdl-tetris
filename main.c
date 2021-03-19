@@ -32,6 +32,8 @@ int main(void) {
     return 1;
   }
 
+  PrepareForStart();
+
   int close_requested = 0;
 
   while (!close_requested) {

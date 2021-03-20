@@ -1,11 +1,12 @@
 #include<stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_image.h>
 #include "game.h"
 
-#define N_SHAPES 1
+#define N_SHAPES 5
 #define SHAPE_SIZE 4
 #define FRAME_DELAY 50
 #define VELOCITY 10
@@ -22,17 +23,55 @@ struct Block {
 
 struct Shape {
   struct Block blocks[SHAPE_SIZE];
+  int rotatable;
 };
 
 
 struct Shape shapes[N_SHAPES] = {
   {
     {
-      {-1, 0},
+      {0, 0},
+      {0, 1},
+      {-1, 1},
+      {1, 1},
+    },
+    1,
+  },
+  {
+    {
+      {0, 0},
+      {0, 1},
+      {0, 2},
+      {1, 2},
+    },
+    1,
+  },
+  {
+    {
+      {0, 0},
+      {0, 1},
+      {0, 2},
+      {0, 3},
+    },
+    1,
+  },
+  {
+    {
       {0, 0},
       {1, 0},
       {0, 1},
+      {1, 1},
     },
+    0,
+  },
+  {
+    {
+      {0, 0},
+      {0, 1},
+      {1, 1},
+      {1, 2},
+    },
+    1,
   },
 };
 
@@ -41,6 +80,7 @@ struct ActiveShape {
   struct Shape shape;
   int x, y;
   int y_pos;
+  int rotation;
 };
 
 
@@ -48,10 +88,11 @@ struct ActiveShape active_shape;
 
 
 void RefreshActiveShape() {
-  active_shape.shape = shapes[0];
+  active_shape.shape = shapes[rand() % N_SHAPES];
   active_shape.x = GRID_WIDTH / 2;
   active_shape.y = 0;
   active_shape.y_pos = 0;
+  active_shape.rotation = 0;
 }
 
 
@@ -68,7 +109,33 @@ void SaveActiveShape() {
 
 
 void RotateShape() {
+  if (active_shape.shape.rotatable == 0) {
+    return;
+  }
 
+  int new_x;
+  int i;
+  int multiplier;
+  struct Block *block;
+
+  if (active_shape.rotation % 2 == 0) {
+    multiplier = -1;
+  } else {
+    multiplier = 1;
+  }
+
+  for (i=0; i < SHAPE_SIZE; i++) {
+    block = &active_shape.shape.blocks[i];
+    new_x = block->y * multiplier;
+    block->y = block->x * multiplier;
+    block->x = new_x;
+  };
+
+  if (active_shape.rotation == 3) {
+    active_shape.rotation = 0;
+  } else {
+    active_shape.rotation += 1;
+  }
 }
 
 

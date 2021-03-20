@@ -8,8 +8,8 @@
 
 #define N_SHAPES 5
 #define SHAPE_SIZE 4
-#define FRAME_DELAY 50
-#define VELOCITY 10
+#define FRAME_DELAY 25 
+#define VELOCITY 5 
 
 int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
 int velocity = VELOCITY;
@@ -140,14 +140,24 @@ void RotateShape() {
 
 
 void DrawBlock(int x, int y, SDL_Renderer *rend) {
-  SDL_Rect r;
-  r.x = x;
-  r.y = y;
-  r.w = BLOCK_SIZE;
-  r.h = BLOCK_SIZE;
+  SDL_Rect outer;
+  SDL_Rect inner;
 
-  SDL_SetRenderDrawColor(rend, 0, 0, 255, 255);
-  SDL_RenderFillRect(rend, &r);
+  outer.x = x;
+  outer.y = y;
+  outer.w = BLOCK_SIZE;
+  outer.h = BLOCK_SIZE;
+
+  inner.x = x + 1;
+  inner.y = y + 1;
+  inner.w = BLOCK_SIZE - 2;
+  inner.h = BLOCK_SIZE - 2;
+
+  SDL_SetRenderDrawColor(rend, 255, 255, 255, 255);
+  SDL_RenderFillRect(rend, &outer);
+
+  SDL_SetRenderDrawColor(rend, 3, 65, 174, 255);
+  SDL_RenderFillRect(rend, &inner);
 }
 
 

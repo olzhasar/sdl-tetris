@@ -32,6 +32,8 @@ int main(void) {
     return 1;
   }
 
+  SDL_CreateRGBSurface(0, GRID_WIDTH * BLOCK_SIZE, GRID_HEIGHT * BLOCK_SIZE, 32, 0, 0, 0, 0);
+
   PrepareForStart();
 
   int close_requested = 0;

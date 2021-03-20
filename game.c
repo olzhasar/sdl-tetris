@@ -108,14 +108,34 @@ void SaveActiveShape() {
 }
 
 
+int DetectCollision(int x, int y) {
+  if (x < 0 || x >= GRID_WIDTH) {
+    return 1;
+  }
+
+  if (y < 0 || y >= GRID_HEIGHT) {
+    return 1;
+  }
+
+  if (grid[x][y] == 1) {
+    return 1;
+  }
+
+  return 0;
+}
+
+
 void RotateShape() {
   if (active_shape.shape.rotatable == 0) {
     return;
   }
 
-  int new_x;
+  struct Block new_blocks[SHAPE_SIZE];
+
   int i;
   int multiplier;
+  int x_pos, y_pos;
+
   struct Block *block;
 
   if (active_shape.rotation % 2 == 0) {
@@ -126,10 +146,24 @@ void RotateShape() {
 
   for (i=0; i < SHAPE_SIZE; i++) {
     block = &active_shape.shape.blocks[i];
-    new_x = block->y * multiplier;
-    block->y = block->x * multiplier;
-    block->x = new_x;
+
+    new_blocks[i].x = block->y * multiplier;
+    new_blocks[i].y = block->x * multiplier;
+
+    x_pos = active_shape.x + new_blocks[i].x;
+    y_pos = active_shape.y + new_blocks[i].y;
+
+    if (DetectCollision(x_pos, y_pos) == 1) {
+      return;
+    }
   };
+
+  for (i=0; i < SHAPE_SIZE; i++) {
+    block = &active_shape.shape.blocks[i];
+
+    block->x = new_blocks[i].x;
+    block->y = new_blocks[i].y;
+  }
 
   if (active_shape.rotation == 3) {
     active_shape.rotation = 0;
@@ -158,23 +192,6 @@ void DrawBlock(int x, int y, SDL_Renderer *rend) {
 
   SDL_SetRenderDrawColor(rend, 3, 65, 174, 255);
   SDL_RenderFillRect(rend, &inner);
-}
-
-
-int DetectCollision(int x, int y) {
-  if (x < 0 || x >= GRID_WIDTH) {
-    return 1;
-  }
-
-  if (y < 0 || y >= GRID_HEIGHT) {
-    return 1;
-  }
-
-  if (grid[x][y] == 1) {
-    return 1;
-  }
-
-  return 0;
 }
 
 

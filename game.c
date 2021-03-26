@@ -19,7 +19,7 @@ int to_erase[GRID_HEIGHT] = {0};
 int to_erase_mark[GRID_HEIGHT] = {0};
 int erase_start = GRID_WIDTH / 2;
 
-int game_over = 0;
+int game_over = 1;
 
 struct Block {
   int x;
@@ -97,7 +97,9 @@ void RestartGame() {
     for (j=0; j < GRID_HEIGHT; j++) {
       grid[i][j] = 0;
     }
-  }
+  };
+
+  game_over = 0;
 }
 
 
@@ -356,6 +358,7 @@ void DrawActiveShape(SDL_Renderer *rend) {
   }
 }
 
+
 void DrawGridBlocks(SDL_Renderer *rend) {
   int i, j;
 
@@ -379,16 +382,13 @@ void GameLoop(SDL_Renderer *rend) {
 
   SDL_RenderClear(rend);
 
-  if (game_over == 0) {
-    DrawActiveShape(rend);
-    DrawGridBlocks(rend);
+  DrawActiveShape(rend);
+  DrawGridBlocks(rend);
 
-    SDL_RenderPresent(rend);
+  SDL_RenderPresent(rend);
 
-    SDL_Delay(FRAME_DELAY);
+  MoveDown();
+  CleanDestroyedBlocks();
 
-    MoveDown();
-
-    CleanDestroyedBlocks();
-  }
+  SDL_Delay(FRAME_DELAY);
 }

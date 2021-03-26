@@ -15,6 +15,12 @@ int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
 int velocity = VELOCITY;
 bool increase_requested = false;
 
+int to_erase[GRID_HEIGHT] = {0};
+int to_erase_mark[GRID_HEIGHT] = {0};
+int erase_start = GRID_WIDTH / 2;
+
+int game_over = 0;
+
 struct Block {
   int x;
   int y;
@@ -84,6 +90,17 @@ struct ActiveShape {
 };
 
 
+void RestartGame() {
+  int i, j;
+
+  for (i=0; i < GRID_WIDTH; i++) {
+    for (j=0; j < GRID_HEIGHT; j++) {
+      grid[i][j] = 0;
+    }
+  }
+}
+
+
 struct ActiveShape active_shape;
 
 
@@ -96,6 +113,52 @@ void RefreshActiveShape() {
 }
 
 
+void ShiftBlocksDown(int row) {
+  int i, j;
+
+  for (j=row; j > 0; j--) {
+    for (i=0; i < GRID_WIDTH; i++) {
+      grid[i][j] = grid[i][j-1];
+    }
+  }
+}
+
+
+void CleanDestroyedBlocks() {
+  int i;
+
+  for (i=0; i < GRID_HEIGHT; i++) {
+    if (to_erase[i] == 1) {
+      grid[erase_start + to_erase_mark[i]][i] = 0;
+      grid[erase_start - to_erase_mark[i]][i] = 0;
+
+      if (to_erase_mark[i] >= erase_start) {
+	to_erase[i] = 0;
+	to_erase_mark[i] = 0;
+
+	ShiftBlocksDown(i);
+      } else {
+	to_erase_mark[i] += 1;
+      }
+    }
+  }
+}
+
+
+int CheckFullRow(int y) {
+  int i;
+
+  for (i = 0; i < GRID_WIDTH; i++) {
+    if (grid[i][y] == 0) {
+      return 0;
+    }
+  }
+
+  to_erase[y] = 1;
+  return 1;
+}
+
+
 void SaveActiveShape() {
   int i;
   int x, y;
@@ -104,6 +167,13 @@ void SaveActiveShape() {
     x = active_shape.x + active_shape.shape.blocks[i].x;
     y = active_shape.y + active_shape.shape.blocks[i].y;
     grid[x][y] = 1;
+
+    if (CheckFullRow(y) == 0) {
+      if (y <= 0) {
+	game_over = 1;
+      }
+    }
+
   }
 }
 
@@ -309,12 +379,16 @@ void GameLoop(SDL_Renderer *rend) {
 
   SDL_RenderClear(rend);
 
-  DrawActiveShape(rend);
-  DrawGridBlocks(rend);
+  if (game_over == 0) {
+    DrawActiveShape(rend);
+    DrawGridBlocks(rend);
 
-  SDL_RenderPresent(rend);
+    SDL_RenderPresent(rend);
 
-  SDL_Delay(FRAME_DELAY);
+    SDL_Delay(FRAME_DELAY);
 
-  MoveDown();
+    MoveDown();
+
+    CleanDestroyedBlocks();
+  }
 }

@@ -10,7 +10,6 @@ Clone this repository to your system:
 
 ```
 git clone https://github.com/olzhasar/sdl-tetris.git
-
 ```
 
 Compile with make

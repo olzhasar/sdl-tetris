@@ -5,11 +5,15 @@ An implementation of classic [Tetris game](https://en.wikipedia.org/wiki/Tetris)
 ## Installation
 
 - Clone repository to your system:
+
 `git clone https://github.com/olzhasar/sdl-tetris.git`
 
 - Compile
+
 `cd sdl-tetris`
+
 `make`
 
 - Run the executable
+
 `./game`

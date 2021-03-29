@@ -19,7 +19,7 @@ int to_erase[GRID_HEIGHT] = {0};
 int to_erase_mark[GRID_HEIGHT] = {0};
 int erase_start = GRID_WIDTH / 2;
 
-int game_over = 1;
+int game_over = 0;
 
 struct Block {
   int x;

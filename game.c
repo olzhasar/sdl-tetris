@@ -130,7 +130,7 @@ void CleanDestroyedBlocks() {
   int i;
 
   for (i=0; i < GRID_HEIGHT; i++) {
-    if (to_erase[i] == 1) {
+    if (to_erase[i]) {
       grid[erase_start + to_erase_mark[i]][i] = 0;
       grid[erase_start - to_erase_mark[i]][i] = 0;
 
@@ -147,11 +147,11 @@ void CleanDestroyedBlocks() {
 }
 
 
-int CheckFullRow(int y) {
+int RowIsFull(int y) {
   int i;
 
   for (i = 0; i < GRID_WIDTH; i++) {
-    if (grid[i][y] == 0) {
+    if (!grid[i][y]) {
       return 0;
     }
   }
@@ -170,7 +170,7 @@ void SaveActiveShape() {
     y = active_shape.y + active_shape.shape.blocks[i].y;
     grid[x][y] = 1;
 
-    if (CheckFullRow(y) == 0) {
+    if (!RowIsFull(y)) {
       if (y <= 0) {
 	game_over = 1;
       }
@@ -189,7 +189,7 @@ int DetectCollision(int x, int y) {
     return 1;
   }
 
-  if (grid[x][y] == 1) {
+  if (grid[x][y]) {
     return 1;
   }
 
@@ -198,7 +198,7 @@ int DetectCollision(int x, int y) {
 
 
 void RotateShape() {
-  if (active_shape.shape.rotatable == 0) {
+  if (!active_shape.shape.rotatable) {
     return;
   }
 
@@ -225,7 +225,7 @@ void RotateShape() {
     x_pos = active_shape.x + new_blocks[i].x;
     y_pos = active_shape.y + new_blocks[i].y;
 
-    if (DetectCollision(x_pos, y_pos) == 1) {
+    if (DetectCollision(x_pos, y_pos)) {
       return;
     }
   };
@@ -279,13 +279,13 @@ void MoveSide(int n) {
     x = active_shape.x + block.x + n;
     y = active_shape.y + block.y;
 
-    if (DetectCollision(x, y) == 1) {
+    if (DetectCollision(x, y)) {
       collision = 1;
       break;
     }
   }
 
-  if (collision == 0) {
+  if (!collision) {
     active_shape.x += n;
   }
 }
@@ -303,13 +303,13 @@ void MoveDown() {
     x = active_shape.x + block.x;
     y = active_shape.y + block.y + 1;
 
-    if (DetectCollision(x, y) == 1) {
+    if (DetectCollision(x, y)) {
       collision = 1;
       break;
     }
   }
 
-  if (collision == 1) {
+  if (collision) {
     SaveActiveShape();
     RefreshActiveShape();
     return;
@@ -364,7 +364,7 @@ void DrawGridBlocks(SDL_Renderer *rend) {
 
   for (i = 0; i < GRID_WIDTH; ++i) {
     for (j = 0; j < GRID_HEIGHT; ++j) {
-      if (grid[i][j] == 1) {
+      if (grid[i][j]) {
 	DrawBlock(i * BLOCK_SIZE, j * BLOCK_SIZE, rend);
       }
     }

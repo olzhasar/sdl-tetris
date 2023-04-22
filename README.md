@@ -8,19 +8,27 @@ An implementation of classic [Tetris game](https://en.wikipedia.org/wiki/Tetris)
 
 Clone this repository to your system:
 
-```
+```sh
 git clone https://github.com/olzhasar/sdl-tetris.git
 ```
 
-Compile with make
+Install sdl2 libraries
 
+MacOS:
+
+```sh
+brew install sdl2 sdl2_image sdl2_ttf
 ```
+
+Compile the project code
+
+```sh
 cd sdl-tetris
 make
 ```
 
 Run the executable
 
-```
+```sh
 ./game
 ```

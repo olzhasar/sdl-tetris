@@ -32,3 +32,9 @@ Run the executable
 ```sh
 ./game
 ```
+
+## TODO
+
+- Optimize data structures
+- Score calculation
+- Port to WASM

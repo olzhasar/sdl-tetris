@@ -48,7 +48,7 @@ int init_graphics() {
   return 0;
 }
 
-void draw_block(int x, int y) {
+void draw_block(int x, int y, bool empty) {
   SDL_Rect outer;
   SDL_Rect inner;
 
@@ -62,10 +62,14 @@ void draw_block(int x, int y) {
   inner.w = BLOCK_SIZE - 2;
   inner.h = BLOCK_SIZE - 2;
 
-  SDL_SetRenderDrawColor(rend, 255, 255, 255, 255);
+  SDL_SetRenderDrawColor(rend, 0xdd, 0xdd, 0xdd, 0xff);
   SDL_RenderFillRect(rend, &outer);
 
-  SDL_SetRenderDrawColor(rend, 3, 65, 174, 255);
+  if (!empty) {
+    SDL_SetRenderDrawColor(rend, 0x00, 0x00, 0xff, 0xFF);
+  } else {
+    SDL_SetRenderDrawColor(rend, 0xcc, 0xcc, 0xcc, 0xFF);
+  }
   SDL_RenderFillRect(rend, &inner);
 }
 

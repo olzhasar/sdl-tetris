@@ -10,4 +10,4 @@ int init_graphics();
 void clear_screen();
 void present_screen();
 void release_resources();
-void draw_block(int x, int y);
+void draw_block(int x, int y, bool blank);

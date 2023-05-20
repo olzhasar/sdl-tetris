@@ -301,7 +301,9 @@ void update_frame() {
   for (int i = 0; i < GRID_WIDTH; ++i) {
     for (int j = 0; j < GRID_HEIGHT; ++j) {
       if (grid[i][j]) {
-        draw_block(i, j);
+        draw_block(i, j, 0);
+      } else {
+        draw_block(i, j, 1);
       }
     }
   }
@@ -314,7 +316,7 @@ void update_frame() {
     x = active_shape.x + block.x;
     y = active_shape.y + block.y;
 
-    draw_block(x, y);
+    draw_block(x, y, 0);
   }
 
   present_screen();

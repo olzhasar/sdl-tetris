@@ -11,7 +11,7 @@ LDFLAGS := `sdl2-config --libs` -lm -lSDL2_ttf
 HDRS :=
 
 # add source files here
-SRCS := $(wildcard *.c)
+SRCS := $(wildcard src/*.c)
 
 # generate names of object files
 OBJS := $(SRCS:.c=.o)

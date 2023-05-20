@@ -1,8 +1,8 @@
 #include <SDL2/SDL.h>
 
 #define BLOCK_SIZE 50
-#define GRID_WIDTH 11
-#define GRID_HEIGHT 15
+#define GRID_WIDTH 10
+#define GRID_HEIGHT 20
 
 extern int game_over;
 

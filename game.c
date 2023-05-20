@@ -1,83 +1,69 @@
-#include<stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_timer.h>
-#include <SDL2/SDL_image.h>
 #include "game.h"
 
-#define FALL_DELAY 250
+enum Action { MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, ROTATE, FALL };
 
 int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
-bool increase_requested = false;
-
-int fall_delay = FALL_DELAY;
-
-int to_erase[GRID_HEIGHT] = {0};
-int erase_start = GRID_WIDTH / 2;
-
 int game_over = 0;
+int to_erase[GRID_HEIGHT] = {0};
+enum Action current_action = MOVE_DOWN;
 
 struct Block {
   int x;
   int y;
 };
 
-
 struct Shape {
   struct Block blocks[SHAPE_SIZE];
   int rotatable;
 };
 
-
 struct Shape shapes[N_SHAPES] = {
-  {
     {
-      {0, 0},
-      {0, 1},
-      {-1, 1},
-      {1, 1},
+        {
+            {0, 0},
+            {0, 1},
+            {-1, 1},
+            {1, 1},
+        },
+        1,
     },
-    1,
-  },
-  {
     {
-      {0, -1},
-      {0, 0},
-      {0, 1},
-      {1, 1},
+        {
+            {0, -1},
+            {0, 0},
+            {0, 1},
+            {1, 1},
+        },
+        1,
     },
-    1,
-  },
-  {
     {
-      {0, -1},
-      {0, 0},
-      {0, 1},
-      {0, 2},
+        {
+            {0, -1},
+            {0, 0},
+            {0, 1},
+            {0, 2},
+        },
+        1,
     },
-    1,
-  },
-  {
     {
-      {0, 0},
-      {1, 0},
-      {0, 1},
-      {1, 1},
+        {
+            {0, 0},
+            {1, 0},
+            {0, 1},
+            {1, 1},
+        },
+        0,
     },
-    0,
-  },
-  {
     {
-      {0, -1},
-      {0, 0},
-      {1, 0},
-      {1, 1},
+        {
+            {0, -1},
+            {0, 0},
+            {1, 0},
+            {1, 1},
+        },
+        1,
     },
-    1,
-  },
 };
-
 
 struct ActiveShape {
   struct Shape shape;
@@ -85,12 +71,13 @@ struct ActiveShape {
   int rotation;
 };
 
+struct ActiveShape active_shape;
 
-void RestartGame() {
+void restart_game() {
   int i, j;
 
-  for (i=0; i < GRID_WIDTH; i++) {
-    for (j=0; j < GRID_HEIGHT; j++) {
+  for (i = 0; i < GRID_WIDTH; i++) {
+    for (j = 0; j < GRID_HEIGHT; j++) {
       grid[i][j] = 0;
     }
   };
@@ -98,45 +85,41 @@ void RestartGame() {
   game_over = 0;
 }
 
+void end_game() {
+  game_over = 1;
+  clear_screen();
+}
 
-struct ActiveShape active_shape;
-
-
-void RefreshActiveShape() {
-  fall_delay = FALL_DELAY;
-
+void refresh_active_shape() {
   active_shape.shape = shapes[rand() % N_SHAPES];
   active_shape.x = GRID_WIDTH / 2;
   active_shape.y = 0;
   active_shape.rotation = 0;
 }
 
-
-void ShiftBlocksDown(int row) {
+void shift_blocks_down(int row) {
   int i, j;
 
-  for (j=row; j > 0; j--) {
-    for (i=0; i < GRID_WIDTH; i++) {
-      grid[i][j] = grid[i][j-1];
+  for (j = row; j > 0; j--) {
+    for (i = 0; i < GRID_WIDTH; i++) {
+      grid[i][j] = grid[i][j - 1];
     }
   }
 }
 
-
-void CleanDestroyedBlocks() {
-  for (int i=0; i < GRID_HEIGHT; i++) {
+void clean_destroyed_blocks() {
+  for (int i = 0; i < GRID_HEIGHT; i++) {
     if (to_erase[i]) {
       to_erase[i] = 0;
-      for (int j=0; j < GRID_WIDTH; j++) {
-	grid[i][j] = 0;
+      for (int j = 0; j < GRID_WIDTH; j++) {
+        grid[i][j] = 0;
       }
-      ShiftBlocksDown(i);
+      shift_blocks_down(i);
     }
   }
 }
 
-
-int RowIsFull(int y) {
+int row_is_full(int y) {
   int i;
 
   for (i = 0; i < GRID_WIDTH; i++) {
@@ -149,8 +132,7 @@ int RowIsFull(int y) {
   return 1;
 }
 
-
-void SaveActiveShape() {
+void save_active_shape() {
   int i;
   int x, y;
 
@@ -159,17 +141,17 @@ void SaveActiveShape() {
     y = active_shape.y + active_shape.shape.blocks[i].y;
     grid[x][y] = 1;
 
-    if (!RowIsFull(y)) {
+    if (!row_is_full(y)) {
       if (y <= 0) {
-	game_over = 1;
+        end_game();
       }
     }
-
   }
+
+  current_action = MOVE_DOWN;
 }
 
-
-int DetectCollision(int x, int y) {
+int detect_collision(int x, int y) {
   if (x < 0 || x >= GRID_WIDTH) {
     return 1;
   }
@@ -185,13 +167,12 @@ int DetectCollision(int x, int y) {
   return 0;
 }
 
+void rotate_shape() {
+  current_action = MOVE_DOWN;
 
-void RotateShape() {
   if (!active_shape.shape.rotatable) {
     return;
   }
-
-  SDL_Delay(100);
 
   struct Block new_blocks[SHAPE_SIZE];
 
@@ -207,7 +188,7 @@ void RotateShape() {
     multiplier = 1;
   }
 
-  for (i=0; i < SHAPE_SIZE; i++) {
+  for (i = 0; i < SHAPE_SIZE; i++) {
     block = &active_shape.shape.blocks[i];
 
     new_blocks[i].x = block->y * multiplier;
@@ -216,12 +197,12 @@ void RotateShape() {
     x_pos = active_shape.x + new_blocks[i].x;
     y_pos = active_shape.y + new_blocks[i].y;
 
-    if (DetectCollision(x_pos, y_pos)) {
+    if (detect_collision(x_pos, y_pos)) {
       return;
     }
   };
 
-  for (i=0; i < SHAPE_SIZE; i++) {
+  for (i = 0; i < SHAPE_SIZE; i++) {
     block = &active_shape.shape.blocks[i];
 
     block->x = new_blocks[i].x;
@@ -235,18 +216,17 @@ void RotateShape() {
   }
 }
 
+void move_side(int n) {
+  current_action = MOVE_DOWN;
 
-void MoveSide(int n) {
   int x, y;
-
-  SDL_Delay(100);
 
   for (int i = 0; i < SHAPE_SIZE; i++) {
     struct Block block = active_shape.shape.blocks[i];
     x = active_shape.x + block.x + n;
     y = active_shape.y + block.y;
 
-    if (DetectCollision(x, y)) {
+    if (detect_collision(x, y)) {
       return;
     }
   }
@@ -254,8 +234,7 @@ void MoveSide(int n) {
   active_shape.x += n;
 }
 
-
-void MoveDown() {
+void move_down(int delay) {
   int i;
   int x, y;
 
@@ -266,62 +245,67 @@ void MoveDown() {
     x = active_shape.x + block.x;
     y = active_shape.y + block.y + 1;
 
-    if (DetectCollision(x, y)) {
-      SaveActiveShape();
-      RefreshActiveShape();
+    if (detect_collision(x, y)) {
+      save_active_shape();
+      refresh_active_shape();
       return;
     }
   }
 
-  SDL_Delay(fall_delay);
+  SDL_Delay(delay);
   active_shape.y += 1;
-
 }
 
-
-void HandleKeyDown(SDL_Event event) {
-  switch( event.key.keysym.sym ) {
-    case SDLK_LEFT:
-    case SDLK_a:
-      MoveSide(-1);
-      break;
-    case SDLK_RIGHT:
-    case SDLK_d:
-      MoveSide(1);
-      break;
-    case SDLK_DOWN:
-    case SDLK_s:
-      fall_delay = 0;
-      break;
-    case SDLK_SPACE:
-      RotateShape();
+void handle_current_action() {
+  switch (current_action) {
+  case MOVE_DOWN:
+    move_down(FALL_DELAY);
+    break;
+  case MOVE_LEFT:
+    move_side(-1);
+    break;
+  case MOVE_RIGHT:
+    move_side(1);
+    break;
+  case ROTATE:
+    rotate_shape();
+    break;
+  case FALL:
+    move_down(0);
+    break;
   }
 }
 
-
-void DrawBlock(int x, int y, SDL_Renderer *rend) {
-  SDL_Rect outer;
-  SDL_Rect inner;
-
-  outer.x = x * BLOCK_SIZE;
-  outer.y = y * BLOCK_SIZE;
-  outer.w = BLOCK_SIZE;
-  outer.h = BLOCK_SIZE;
-
-  inner.x = x * BLOCK_SIZE + 1;
-  inner.y = y * BLOCK_SIZE + 1;
-  inner.w = BLOCK_SIZE - 2;
-  inner.h = BLOCK_SIZE - 2;
-
-  SDL_SetRenderDrawColor(rend, 255, 255, 255, 255);
-  SDL_RenderFillRect(rend, &outer);
-
-  SDL_SetRenderDrawColor(rend, 3, 65, 174, 255);
-  SDL_RenderFillRect(rend, &inner);
+void handle_key_down(SDL_Event event) {
+  switch (event.key.keysym.sym) {
+  case SDLK_LEFT:
+  case SDLK_a:
+    current_action = MOVE_LEFT;
+    break;
+  case SDLK_RIGHT:
+  case SDLK_d:
+    current_action = MOVE_RIGHT;
+    break;
+  case SDLK_DOWN:
+  case SDLK_s:
+    current_action = FALL;
+    break;
+  case SDLK_SPACE:
+    current_action = ROTATE;
+  }
 }
 
+void update_frame() {
+  clear_screen();
 
-void DrawActiveShape(SDL_Renderer *rend) {
+  for (int i = 0; i < GRID_WIDTH; ++i) {
+    for (int j = 0; j < GRID_HEIGHT; ++j) {
+      if (grid[i][j]) {
+        draw_block(i, j);
+      }
+    }
+  }
+
   int x, y;
   struct Block block;
 
@@ -330,37 +314,22 @@ void DrawActiveShape(SDL_Renderer *rend) {
     x = active_shape.x + block.x;
     y = active_shape.y + block.y;
 
-    DrawBlock(x, y, rend);
+    draw_block(x, y);
   }
+
+  present_screen();
 }
 
-
-void DrawGridBlocks(SDL_Renderer *rend) {
-  for (int i = 0; i < GRID_WIDTH; ++i) {
-    for (int j = 0; j < GRID_HEIGHT; ++j) {
-      if (grid[i][j]) {
-	DrawBlock(i, j, rend);
-      }
-    }
-  }
+void prepare_game() {
+  refresh_active_shape();
+  init_graphics();
 }
 
-
-void PrepareForStart() {
-  RefreshActiveShape();
+void game_loop() {
+  handle_current_action();
+  update_frame();
+  clean_destroyed_blocks();
+  SDL_Delay(16);
 }
 
-
-void GameLoop(SDL_Renderer *rend) {
-  SDL_SetRenderDrawColor(rend, 0, 0, 0, 0);
-
-  SDL_RenderClear(rend);
-
-  DrawActiveShape(rend);
-  DrawGridBlocks(rend);
-
-  SDL_RenderPresent(rend);
-
-  MoveDown();
-  CleanDestroyedBlocks();
-}
+void terminate_game() { release_resources(); }

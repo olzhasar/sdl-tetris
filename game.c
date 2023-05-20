@@ -6,17 +6,14 @@
 #include <SDL2/SDL_image.h>
 #include "game.h"
 
-#define N_SHAPES 5
-#define SHAPE_SIZE 4
-#define FRAME_DELAY 25 
-#define VELOCITY 5 
+#define FALL_DELAY 250
 
 int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
-int velocity = VELOCITY;
 bool increase_requested = false;
 
+int fall_delay = FALL_DELAY;
+
 int to_erase[GRID_HEIGHT] = {0};
-int to_erase_mark[GRID_HEIGHT] = {0};
 int erase_start = GRID_WIDTH / 2;
 
 int game_over = 0;
@@ -85,7 +82,6 @@ struct Shape shapes[N_SHAPES] = {
 struct ActiveShape {
   struct Shape shape;
   int x, y;
-  int y_pos;
   int rotation;
 };
 
@@ -107,10 +103,11 @@ struct ActiveShape active_shape;
 
 
 void RefreshActiveShape() {
+  fall_delay = FALL_DELAY;
+
   active_shape.shape = shapes[rand() % N_SHAPES];
   active_shape.x = GRID_WIDTH / 2;
   active_shape.y = 0;
-  active_shape.y_pos = 0;
   active_shape.rotation = 0;
 }
 
@@ -127,21 +124,13 @@ void ShiftBlocksDown(int row) {
 
 
 void CleanDestroyedBlocks() {
-  int i;
-
-  for (i=0; i < GRID_HEIGHT; i++) {
+  for (int i=0; i < GRID_HEIGHT; i++) {
     if (to_erase[i]) {
-      grid[erase_start + to_erase_mark[i]][i] = 0;
-      grid[erase_start - to_erase_mark[i]][i] = 0;
-
-      if (to_erase_mark[i] >= erase_start) {
-	to_erase[i] = 0;
-	to_erase_mark[i] = 0;
-
-	ShiftBlocksDown(i);
-      } else {
-	to_erase_mark[i] += 1;
+      to_erase[i] = 0;
+      for (int j=0; j < GRID_WIDTH; j++) {
+	grid[i][j] = 0;
       }
+      ShiftBlocksDown(i);
     }
   }
 }
@@ -202,6 +191,8 @@ void RotateShape() {
     return;
   }
 
+  SDL_Delay(100);
+
   struct Block new_blocks[SHAPE_SIZE];
 
   int i;
@@ -245,54 +236,26 @@ void RotateShape() {
 }
 
 
-void DrawBlock(int x, int y, SDL_Renderer *rend) {
-  SDL_Rect outer;
-  SDL_Rect inner;
-
-  outer.x = x;
-  outer.y = y;
-  outer.w = BLOCK_SIZE;
-  outer.h = BLOCK_SIZE;
-
-  inner.x = x + 1;
-  inner.y = y + 1;
-  inner.w = BLOCK_SIZE - 2;
-  inner.h = BLOCK_SIZE - 2;
-
-  SDL_SetRenderDrawColor(rend, 255, 255, 255, 255);
-  SDL_RenderFillRect(rend, &outer);
-
-  SDL_SetRenderDrawColor(rend, 3, 65, 174, 255);
-  SDL_RenderFillRect(rend, &inner);
-}
-
-
 void MoveSide(int n) {
-  int collision = 0;
-  int i;
   int x, y;
 
-  struct Block block;
+  SDL_Delay(100);
 
-  for (i = 0; i < SHAPE_SIZE; i++) {
-    block = active_shape.shape.blocks[i];
+  for (int i = 0; i < SHAPE_SIZE; i++) {
+    struct Block block = active_shape.shape.blocks[i];
     x = active_shape.x + block.x + n;
     y = active_shape.y + block.y;
 
     if (DetectCollision(x, y)) {
-      collision = 1;
-      break;
+      return;
     }
   }
 
-  if (!collision) {
-    active_shape.x += n;
-  }
+  active_shape.x += n;
 }
 
 
 void MoveDown() {
-  int collision = 0;
   int i;
   int x, y;
 
@@ -304,21 +267,14 @@ void MoveDown() {
     y = active_shape.y + block.y + 1;
 
     if (DetectCollision(x, y)) {
-      collision = 1;
-      break;
+      SaveActiveShape();
+      RefreshActiveShape();
+      return;
     }
   }
 
-  if (collision) {
-    SaveActiveShape();
-    RefreshActiveShape();
-    return;
-  }
-
-  active_shape.y_pos += velocity;
-  if (active_shape.y_pos % BLOCK_SIZE == 0) {
-    active_shape.y += 1;
-  }
+  SDL_Delay(fall_delay);
+  active_shape.y += 1;
 
 }
 
@@ -335,24 +291,44 @@ void HandleKeyDown(SDL_Event event) {
       break;
     case SDLK_DOWN:
     case SDLK_s:
-      increase_requested = true;
+      fall_delay = 0;
       break;
     case SDLK_SPACE:
       RotateShape();
   }
+}
 
+
+void DrawBlock(int x, int y, SDL_Renderer *rend) {
+  SDL_Rect outer;
+  SDL_Rect inner;
+
+  outer.x = x * BLOCK_SIZE;
+  outer.y = y * BLOCK_SIZE;
+  outer.w = BLOCK_SIZE;
+  outer.h = BLOCK_SIZE;
+
+  inner.x = x * BLOCK_SIZE + 1;
+  inner.y = y * BLOCK_SIZE + 1;
+  inner.w = BLOCK_SIZE - 2;
+  inner.h = BLOCK_SIZE - 2;
+
+  SDL_SetRenderDrawColor(rend, 255, 255, 255, 255);
+  SDL_RenderFillRect(rend, &outer);
+
+  SDL_SetRenderDrawColor(rend, 3, 65, 174, 255);
+  SDL_RenderFillRect(rend, &inner);
 }
 
 
 void DrawActiveShape(SDL_Renderer *rend) {
-  int i;
   int x, y;
   struct Block block;
 
-  for (i = 0; i < 4; ++i) {
+  for (int i = 0; i < SHAPE_SIZE; ++i) {
     block = active_shape.shape.blocks[i];
-    x = (active_shape.x + block.x) * BLOCK_SIZE;
-    y = active_shape.y_pos + block.y * BLOCK_SIZE;
+    x = active_shape.x + block.x;
+    y = active_shape.y + block.y;
 
     DrawBlock(x, y, rend);
   }
@@ -360,12 +336,10 @@ void DrawActiveShape(SDL_Renderer *rend) {
 
 
 void DrawGridBlocks(SDL_Renderer *rend) {
-  int i, j;
-
-  for (i = 0; i < GRID_WIDTH; ++i) {
-    for (j = 0; j < GRID_HEIGHT; ++j) {
+  for (int i = 0; i < GRID_WIDTH; ++i) {
+    for (int j = 0; j < GRID_HEIGHT; ++j) {
       if (grid[i][j]) {
-	DrawBlock(i * BLOCK_SIZE, j * BLOCK_SIZE, rend);
+	DrawBlock(i, j, rend);
       }
     }
   }
@@ -389,6 +363,4 @@ void GameLoop(SDL_Renderer *rend) {
 
   MoveDown();
   CleanDestroyedBlocks();
-
-  SDL_Delay(FRAME_DELAY);
 }

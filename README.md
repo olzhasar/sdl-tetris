@@ -41,5 +41,5 @@ Run the executable
 
 ## TODO
 
-- Score calculation
+- Different block colors
 - Port to WASM

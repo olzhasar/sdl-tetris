@@ -128,7 +128,7 @@ int detect_collision(int x, int y) {
     return 1;
   }
 
-  if (y < 0 || y >= GRID_HEIGHT) {
+  if (y >= GRID_HEIGHT) { // collisions at the top are OK
     return 1;
   }
 

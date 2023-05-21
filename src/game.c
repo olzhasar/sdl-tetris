@@ -3,6 +3,9 @@
 enum Action current_action = MOVE_DOWN;
 int game_over = 0;
 
+int WAIT = 32;
+int iteration = 0;
+
 // Grid is represented as m x n matrix binary matrix. 0 - free cell, 1 -
 // occupied
 int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
@@ -35,6 +38,8 @@ void restart_game() {
   };
 
   game_over = 0;
+
+  SDL_Delay(300);
 }
 
 void end_game() {
@@ -106,6 +111,7 @@ void lock_shape() {
     }
   }
 
+  iteration = 0;
   current_action = MOVE_DOWN;
 }
 
@@ -167,7 +173,6 @@ void move_side(int n) {
     y = current_shape[i * 2 + 1] + current_y;
 
     if (detect_collision(x, y)) {
-      current_action = MOVE_DOWN;
       return;
     }
   }
@@ -175,7 +180,14 @@ void move_side(int n) {
   current_x += n;
 }
 
-void move_down(int delay) {
+void move_down() {
+  // Move only once in WAIT times
+  if (iteration < WAIT) {
+    return;
+  }
+
+  iteration = 0;
+
   int x, y;
 
   for (int i = 0; i < 4; i++) {
@@ -189,14 +201,13 @@ void move_down(int delay) {
     }
   }
 
-  SDL_Delay(delay);
   current_y += 1;
 }
 
 void handle_current_action() {
   switch (current_action) {
   case MOVE_DOWN:
-    move_down(FALL_DELAY);
+    move_down();
     break;
   case MOVE_LEFT:
     move_side(-1);
@@ -211,7 +222,8 @@ void handle_current_action() {
     current_action = MOVE_DOWN;
     break;
   case FALL:
-    move_down(0);
+    iteration = WAIT;
+    move_down();
     break;
   }
 }
@@ -255,6 +267,7 @@ void game_loop() {
   handle_current_action();
   clean_destroyed_blocks();
   update_frame();
+  iteration++;
   SDL_Delay(16);
 }
 

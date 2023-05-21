@@ -41,6 +41,5 @@ Run the executable
 
 ## TODO
 
-- Optimize data structures
 - Score calculation
 - Port to WASM

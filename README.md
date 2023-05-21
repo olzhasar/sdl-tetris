@@ -33,6 +33,12 @@ Run the executable
 ./game
 ```
 
+## Controls
+
+- Arrows or WASD for movements
+- Space for rotation
+- Escape - exit
+
 ## TODO
 
 - Optimize data structures

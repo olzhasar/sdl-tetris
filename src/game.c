@@ -56,9 +56,8 @@ void end_game() {
 void spawn_shape() {
   current_shape_type = rand() % N_SHAPES;
 
-  for (int i = 0; i < 4; i++) {
-    current_shape[i * 2] = SHAPES[current_shape_type][i * 2];
-    current_shape[i * 2 + 1] = SHAPES[current_shape_type][i * 2 + 1];
+  for (int i = 0; i < 8; i++) {
+    current_shape[i] = SHAPES[current_shape_type][i];
   }
 
   current_x = GRID_WIDTH / 2;

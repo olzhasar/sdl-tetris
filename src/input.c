@@ -1,5 +1,5 @@
-#include "SDL_keycode.h"
-#import "game.h"
+#include "game.h"
+#include <SDL_keycode.h>
 
 int close_requested = 0;
 

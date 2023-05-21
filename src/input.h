@@ -1,4 +1,4 @@
-#import "definitions.h"
+#include "definitions.h"
 
 extern int close_requested;
 

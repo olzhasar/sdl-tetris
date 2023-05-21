@@ -11,8 +11,7 @@
 #define SCORE_SINGLE 1
 #define SCORE_LINE 100
 
-#define N_SHAPES 5
-#define FALL_DELAY 250
+#define N_SHAPES 7
 
 extern int game_over;
 extern int score;

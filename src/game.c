@@ -17,6 +17,7 @@ int to_destroy[GRID_HEIGHT] = {0};
 // Each value pair corresponds to the shift from the shape position over x and y
 // axis
 int current_shape[8] = {0};
+int current_shape_type;
 
 // Current rotation identifier 0-4
 int current_rotation = 0;
@@ -25,10 +26,14 @@ int current_x = 0, current_y = 0;
 
 // Represent shapes as an array of 8 ints.
 // Each int pair represents the shift from the shape position over x and y axis
-int SHAPES[N_SHAPES][8] = {
-    {0, 0, 0, 1, -1, 1, 1, 1}, {0, -1, 0, 0, 0, 1, 1, 1},
-    {0, -1, 0, 0, 0, 1, 0, 2}, {0, 0, 1, 0, 0, 1, 1, 1},
-    {0, -1, 0, 0, 1, 0, 1, 1},
+int SHAPES[7][8] = {
+    {0, 0, 1, 0, 0, 1, 1, 1},   // O
+    {0, 0, -1, 0, 1, 0, 0, 1},  // T
+    {0, 0, 0, -1, 0, 1, 1, 1},  // L
+    {0, 0, 0, -1, 0, 1, -1, 1}, // J
+    {0, 0, 0, -1, 0, 1, 0, 2},  // I
+    {0, 0, 1, 0, 0, 1, -1, 1},  // S
+    {0, 0, -1, 0, 0, 1, 1, 1},  // Z
 };
 
 void restart_game() {
@@ -49,11 +54,11 @@ void end_game() {
 }
 
 void spawn_shape() {
-  int n = rand() % N_SHAPES;
+  current_shape_type = rand() % N_SHAPES;
 
-  for (int i = 0; i < N_SHAPES; i++) {
-    current_shape[i * 2] = SHAPES[n][i * 2];
-    current_shape[i * 2 + 1] = SHAPES[n][i * 2 + 1];
+  for (int i = 0; i < 4; i++) {
+    current_shape[i * 2] = SHAPES[current_shape_type][i * 2];
+    current_shape[i * 2 + 1] = SHAPES[current_shape_type][i * 2 + 1];
   }
 
   current_x = GRID_WIDTH / 2;
@@ -140,6 +145,10 @@ int detect_collision(int x, int y) {
 }
 
 void rotate_shape() {
+  if (current_shape_type == 0) {
+    return; // O-shape should not be rotated
+  }
+
   int temp[8] = {0};
 
   int multiplier;

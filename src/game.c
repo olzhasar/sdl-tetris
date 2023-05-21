@@ -276,6 +276,8 @@ void update_frame() {
 }
 
 void init_game() {
+  srand(time(NULL)); // seed the random number generator
+
   spawn_shape();
   init_graphics();
 }

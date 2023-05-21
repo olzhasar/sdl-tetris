@@ -13,12 +13,14 @@ void handle_key_down(SDL_Keycode key_code) {
   case SDLK_d:
     current_action = MOVE_RIGHT;
     break;
+  case SDLK_UP:
+  case SDLK_w:
+    current_action = ROTATE;
+    break;
   case SDLK_DOWN:
   case SDLK_s:
-    current_action = FALL;
-    break;
   case SDLK_SPACE:
-    current_action = ROTATE;
+    current_action = FALL;
   }
 }
 

@@ -35,9 +35,11 @@ Run the executable
 
 ## Controls
 
-- Arrows or WASD for movements
-- Space for rotation
-- Escape - exit
+- Rotate - Up arrow, W
+- Left - Left arrow, A
+- Right - Right arrow, D
+- Drop - Down arrow, S, Space
+- Quit - ESC
 
 ## TODO
 

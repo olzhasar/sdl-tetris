@@ -216,25 +216,6 @@ void handle_current_action() {
   }
 }
 
-void handle_key_down(SDL_Event event) {
-  switch (event.key.keysym.sym) {
-  case SDLK_LEFT:
-  case SDLK_a:
-    current_action = MOVE_LEFT;
-    break;
-  case SDLK_RIGHT:
-  case SDLK_d:
-    current_action = MOVE_RIGHT;
-    break;
-  case SDLK_DOWN:
-  case SDLK_s:
-    current_action = FALL;
-    break;
-  case SDLK_SPACE:
-    current_action = ROTATE;
-  }
-}
-
 void update_frame() {
   clear_screen();
 

@@ -1,7 +1,7 @@
 #include "main.h"
 
 int main(void) {
-  prepare_game();
+  init_game();
 
   int close_requested = 0;
 

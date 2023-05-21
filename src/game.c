@@ -1,83 +1,35 @@
 #include "game.h"
 
-enum Action { MOVE_LEFT, MOVE_RIGHT, MOVE_DOWN, ROTATE, FALL };
-
-int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
-int game_over = 0;
-int to_erase[GRID_HEIGHT] = {0};
 enum Action current_action = MOVE_DOWN;
+int game_over = 0;
 
-struct Block {
-  int x;
-  int y;
+// Grid is represented as m x n matrix binary matrix. 0 - free cell, 1 -
+// occupied
+int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
+// Array of rows that need to be destroyed
+int to_destroy[GRID_HEIGHT] = {0};
+
+// Array of blocks in the current shape
+// Each value pair corresponds to the shift from the shape position over x and y
+// axis
+int current_shape[8] = {0};
+
+// Current rotation identifier 0-4
+int current_rotation = 0;
+// Current shape coordinates
+int current_x = 0, current_y = 0;
+
+// Represent shapes as an array of 8 ints.
+// Each int pair represents the shift from the shape position over x and y axis
+int SHAPES[N_SHAPES][8] = {
+    {0, 0, 0, 1, -1, 1, 1, 1}, {0, -1, 0, 0, 0, 1, 1, 1},
+    {0, -1, 0, 0, 0, 1, 0, 2}, {0, 0, 1, 0, 0, 1, 1, 1},
+    {0, -1, 0, 0, 1, 0, 1, 1},
 };
-
-struct Shape {
-  struct Block blocks[SHAPE_SIZE];
-  int rotatable;
-};
-
-struct Shape shapes[N_SHAPES] = {
-    {
-        {
-            {0, 0},
-            {0, 1},
-            {-1, 1},
-            {1, 1},
-        },
-        1,
-    },
-    {
-        {
-            {0, -1},
-            {0, 0},
-            {0, 1},
-            {1, 1},
-        },
-        1,
-    },
-    {
-        {
-            {0, -1},
-            {0, 0},
-            {0, 1},
-            {0, 2},
-        },
-        1,
-    },
-    {
-        {
-            {0, 0},
-            {1, 0},
-            {0, 1},
-            {1, 1},
-        },
-        0,
-    },
-    {
-        {
-            {0, -1},
-            {0, 0},
-            {1, 0},
-            {1, 1},
-        },
-        1,
-    },
-};
-
-struct ActiveShape {
-  struct Shape shape;
-  int x, y;
-  int rotation;
-};
-
-struct ActiveShape active_shape;
 
 void restart_game() {
-  int i, j;
-
-  for (i = 0; i < GRID_WIDTH; i++) {
-    for (j = 0; j < GRID_HEIGHT; j++) {
+  for (int i = 0; i < GRID_WIDTH; i++) {
+    for (int j = 0; j < GRID_HEIGHT; j++) {
       grid[i][j] = 0;
     }
   };
@@ -90,11 +42,17 @@ void end_game() {
   clear_screen();
 }
 
-void refresh_active_shape() {
-  active_shape.shape = shapes[rand() % N_SHAPES];
-  active_shape.x = GRID_WIDTH / 2;
-  active_shape.y = 0;
-  active_shape.rotation = 0;
+void spawn_shape() {
+  int n = rand() % N_SHAPES;
+
+  for (int i = 0; i < N_SHAPES; i++) {
+    current_shape[i * 2] = SHAPES[n][i * 2];
+    current_shape[i * 2 + 1] = SHAPES[n][i * 2 + 1];
+  }
+
+  current_x = GRID_WIDTH / 2;
+  current_y = 0;
+  current_rotation = 0;
 }
 
 void shift_blocks_down(int row) {
@@ -109,8 +67,8 @@ void shift_blocks_down(int row) {
 
 void clean_destroyed_blocks() {
   for (int i = 0; i < GRID_HEIGHT; i++) {
-    if (to_erase[i]) {
-      to_erase[i] = 0;
+    if (to_destroy[i]) {
+      to_destroy[i] = 0;
       for (int j = 0; j < GRID_WIDTH; j++) {
         grid[i][j] = 0;
       }
@@ -128,17 +86,17 @@ int row_is_full(int y) {
     }
   }
 
-  to_erase[y] = 1;
+  to_destroy[y] = 1;
   return 1;
 }
 
-void save_active_shape() {
+void lock_shape() {
   int i;
   int x, y;
 
-  for (i = 0; i < SHAPE_SIZE; i++) {
-    x = active_shape.x + active_shape.shape.blocks[i].x;
-    y = active_shape.y + active_shape.shape.blocks[i].y;
+  for (i = 0; i < 4; i++) {
+    x = current_shape[i * 2] + current_x;
+    y = current_shape[i * 2 + 1] + current_y;
     grid[x][y] = 1;
 
     if (!row_is_full(y)) {
@@ -168,92 +126,71 @@ int detect_collision(int x, int y) {
 }
 
 void rotate_shape() {
-  current_action = MOVE_DOWN;
+  int temp[8] = {0};
 
-  if (!active_shape.shape.rotatable) {
-    return;
-  }
-
-  struct Block new_blocks[SHAPE_SIZE];
-
-  int i;
   int multiplier;
-  int x_pos, y_pos;
+  int x, y;
 
-  struct Block *block;
-
-  if (active_shape.rotation % 2 == 0) {
+  if (current_rotation % 2 == 0) {
     multiplier = -1;
   } else {
     multiplier = 1;
   }
 
-  for (i = 0; i < SHAPE_SIZE; i++) {
-    block = &active_shape.shape.blocks[i];
+  for (int i = 0; i < 4; i++) {
+    temp[i * 2] = current_shape[i * 2 + 1] * multiplier;
+    temp[i * 2 + 1] = current_shape[i * 2] * multiplier;
 
-    new_blocks[i].x = block->y * multiplier;
-    new_blocks[i].y = block->x * multiplier;
+    x = temp[i * 2] + current_x;
+    y = temp[i * 2 + 1] + current_y;
 
-    x_pos = active_shape.x + new_blocks[i].x;
-    y_pos = active_shape.y + new_blocks[i].y;
-
-    if (detect_collision(x_pos, y_pos)) {
+    if (detect_collision(x, y)) {
       return;
     }
   };
 
-  for (i = 0; i < SHAPE_SIZE; i++) {
-    block = &active_shape.shape.blocks[i];
-
-    block->x = new_blocks[i].x;
-    block->y = new_blocks[i].y;
+  for (int i = 0; i < 8; i++) {
+    current_shape[i] = temp[i];
   }
 
-  if (active_shape.rotation == 3) {
-    active_shape.rotation = 0;
-  } else {
-    active_shape.rotation += 1;
+  current_rotation += 1;
+  if (current_rotation == 4) {
+    current_rotation = 0;
   }
 }
 
 void move_side(int n) {
-  current_action = MOVE_DOWN;
-
   int x, y;
 
-  for (int i = 0; i < SHAPE_SIZE; i++) {
-    struct Block block = active_shape.shape.blocks[i];
-    x = active_shape.x + block.x + n;
-    y = active_shape.y + block.y;
+  for (int i = 0; i < 4; i++) {
+    x = current_shape[i * 2] + current_x + n;
+    y = current_shape[i * 2 + 1] + current_y;
 
     if (detect_collision(x, y)) {
+      current_action = MOVE_DOWN;
       return;
     }
   }
 
-  active_shape.x += n;
+  current_x += n;
 }
 
 void move_down(int delay) {
-  int i;
   int x, y;
 
-  struct Block block;
-
-  for (i = 0; i < SHAPE_SIZE; i++) {
-    block = active_shape.shape.blocks[i];
-    x = active_shape.x + block.x;
-    y = active_shape.y + block.y + 1;
+  for (int i = 0; i < 4; i++) {
+    x = current_shape[i * 2] + current_x;
+    y = current_shape[i * 2 + 1] + current_y + 1;
 
     if (detect_collision(x, y)) {
-      save_active_shape();
-      refresh_active_shape();
+      lock_shape();
+      spawn_shape();
       return;
     }
   }
 
   SDL_Delay(delay);
-  active_shape.y += 1;
+  current_y += 1;
 }
 
 void handle_current_action() {
@@ -263,12 +200,15 @@ void handle_current_action() {
     break;
   case MOVE_LEFT:
     move_side(-1);
+    current_action = MOVE_DOWN;
     break;
   case MOVE_RIGHT:
     move_side(1);
+    current_action = MOVE_DOWN;
     break;
   case ROTATE:
     rotate_shape();
+    current_action = MOVE_DOWN;
     break;
   case FALL:
     move_down(0);
@@ -309,12 +249,10 @@ void update_frame() {
   }
 
   int x, y;
-  struct Block block;
 
-  for (int i = 0; i < SHAPE_SIZE; ++i) {
-    block = active_shape.shape.blocks[i];
-    x = active_shape.x + block.x;
-    y = active_shape.y + block.y;
+  for (int i = 0; i < 4; i++) {
+    x = current_shape[i * 2] + current_x;
+    y = current_shape[i * 2 + 1] + current_y;
 
     draw_block(x, y, 0);
   }
@@ -322,8 +260,8 @@ void update_frame() {
   present_screen();
 }
 
-void prepare_game() {
-  refresh_active_shape();
+void init_game() {
+  spawn_shape();
   init_graphics();
 }
 

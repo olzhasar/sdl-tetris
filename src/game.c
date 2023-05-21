@@ -77,15 +77,15 @@ void destroy_row(int row) {
 void clean_destroyed_blocks() {
   int count = 0;
 
-  for (int i = 0; i < GRID_HEIGHT; i++) {
-    if (to_destroy[i]) {
+  for (int j = 0; j < GRID_HEIGHT; j++) {
+    if (to_destroy[j]) {
       count++;
 
-      to_destroy[i] = 0;
-      for (int j = 0; j < GRID_WIDTH; j++) {
+      to_destroy[j] = 0;
+      for (int i = 0; i < GRID_WIDTH; i++) {
         grid[i][j] = 0;
       }
-      destroy_row(i);
+      destroy_row(j);
     }
   }
 
@@ -95,9 +95,11 @@ void clean_destroyed_blocks() {
 }
 
 int row_is_full(int y) {
-  int i;
+  if (y < 0) { // can be negative at the end of the game
+    return 1;
+  }
 
-  for (i = 0; i < GRID_WIDTH; i++) {
+  for (int i = 0; i < GRID_WIDTH; i++) {
     if (!grid[i][y]) {
       return 0;
     }
@@ -114,7 +116,10 @@ void lock_shape() {
   for (i = 0; i < 4; i++) {
     x = current_shape[i * 2] + current_x;
     y = current_shape[i * 2 + 1] + current_y;
-    grid[x][y] = 1;
+
+    if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
+      grid[x][y] = 1;
+    }
 
     if (!row_is_full(y)) {
       if (y <= 0) {
@@ -137,7 +142,7 @@ int detect_collision(int x, int y) {
     return 1;
   }
 
-  if (grid[x][y]) {
+  if (y >= 0 && grid[x][y]) {
     return 1;
   }
 

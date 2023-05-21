@@ -1,6 +1,6 @@
 # SDL Tetris
 
-An implementation of classic [Tetris game](https://en.wikipedia.org/wiki/Tetris) in C programming language using [SDL-2 library](https://www.libsdl.org/)
+An implementation of the classic [Tetris game](https://en.wikipedia.org/wiki/Tetris) in C programming language using [SDL-2 library](https://www.libsdl.org/)
 
 ![Preview](preview.gif)
 
@@ -12,12 +12,12 @@ Clone this repository to your system:
 git clone https://github.com/olzhasar/sdl-tetris.git
 ```
 
-Install sdl2 libraries
+[Install](https://wiki.libsdl.org/SDL2/Installation) SDL2 and SDL2_ttf on your machine
 
-MacOS:
+On MacOS you can use Homebrew:
 
 ```sh
-brew install sdl2 sdl2_image sdl2_ttf
+brew install sdl2 sdl2_ttf
 ```
 
 Compile the project code

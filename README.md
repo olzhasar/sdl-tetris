@@ -2,7 +2,7 @@
 
 An implementation of classic [Tetris game](https://en.wikipedia.org/wiki/Tetris) in C programming language using [SDL-2 library](https://www.libsdl.org/)
 
-![Preview](src/assets/preview.gif)
+![Preview](preview.gif)
 
 ## Installation
 

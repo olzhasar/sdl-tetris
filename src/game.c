@@ -2,6 +2,7 @@
 
 enum Action current_action = MOVE_DOWN;
 int game_over = 0;
+int score = 0;
 
 int WAIT = 32;
 int iteration = 0;
@@ -60,25 +61,31 @@ void spawn_shape() {
   current_rotation = 0;
 }
 
-void shift_blocks_down(int row) {
-  int i, j;
-
-  for (j = row; j > 0; j--) {
-    for (i = 0; i < GRID_WIDTH; i++) {
+void destroy_row(int row) {
+  for (int j = row; j > 0; j--) {
+    for (int i = 0; i < GRID_WIDTH; i++) {
       grid[i][j] = grid[i][j - 1];
     }
   }
 }
 
 void clean_destroyed_blocks() {
+  int count = 0;
+
   for (int i = 0; i < GRID_HEIGHT; i++) {
     if (to_destroy[i]) {
+      count++;
+
       to_destroy[i] = 0;
       for (int j = 0; j < GRID_WIDTH; j++) {
         grid[i][j] = 0;
       }
-      shift_blocks_down(i);
+      destroy_row(i);
     }
+  }
+
+  if (count) {
+    score += SCORE_LINE * (1 + 2 * (count - 1));
   }
 }
 
@@ -112,6 +119,7 @@ void lock_shape() {
   }
 
   iteration = 0;
+  score += SCORE_SINGLE;
   current_action = MOVE_DOWN;
 }
 

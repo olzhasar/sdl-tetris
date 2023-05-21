@@ -31,11 +31,17 @@ int init_graphics() {
   // Game over text
 
   TTF_Init();
-  TTF_Font *Font = TTF_OpenFont("assets/font.ttf", 18);
-  SDL_Color White = {255, 255, 255};
 
-  SDL_Surface *surfaceMessage =
+  return 0;
+}
+
+void render_game_over_message() {
+  SDL_Color White = {255, 255, 255};
+  TTF_Font *Font = TTF_OpenFont("src/assets/font.ttf", 18);
+
+  surfaceMessage =
       TTF_RenderText_Solid(Font, "Game Over. Press any key to restart", White);
+
   Message = SDL_CreateTextureFromSurface(rend, surfaceMessage);
 
   Message_rect.x = BLOCK_SIZE;
@@ -44,8 +50,7 @@ int init_graphics() {
   Message_rect.h = BLOCK_SIZE / 2;
 
   SDL_RenderCopy(rend, Message, NULL, &Message_rect);
-
-  return 0;
+  SDL_RenderPresent(rend);
 }
 
 void draw_block(int x, int y, bool empty) {

@@ -217,6 +217,11 @@ void handle_current_action() {
 }
 
 void update_frame() {
+  if (game_over) {
+    render_game_over_message();
+    return;
+  }
+
   clear_screen();
 
   for (int i = 0; i < GRID_WIDTH; ++i) {
@@ -248,8 +253,8 @@ void init_game() {
 
 void game_loop() {
   handle_current_action();
-  update_frame();
   clean_destroyed_blocks();
+  update_frame();
   SDL_Delay(16);
 }
 

@@ -20,20 +20,22 @@ static TTF_Font *Font_32;
 
 static int init_fonts() {
   if (TTF_Init() != 0) {
-    printf("error initializing TTF: %s\\n", TTF_GetError());
+    SDL_LogError(0, "error initializing TTF: %s\\n", TTF_GetError());
     return -1;
   };
 
   Font_18 = TTF_OpenFont(FONT_PATH, 18);
   if (!Font_18) {
-    printf("error opening font 18 %s\n%s\\n", FONT_PATH, TTF_GetError());
+    SDL_LogError(0, "error opening font 18 %s\n%s\\n", FONT_PATH,
+                 TTF_GetError());
     TTF_Quit();
     return -1;
   }
 
   Font_32 = TTF_OpenFont(FONT_PATH, 32);
   if (!Font_32) {
-    printf("error opening font 32 %s\n%s\\n", FONT_PATH, TTF_GetError());
+    SDL_LogError(0, "error opening font 32 %s\n%s\\n", FONT_PATH,
+                 TTF_GetError());
     TTF_CloseFont(Font_18);
     TTF_Quit();
     return -1;
@@ -44,7 +46,7 @@ static int init_fonts() {
 
 int init_graphics() {
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-    printf("error initializing SDL: %s\\n", SDL_GetError());
+    SDL_LogError(0, "error initializing SDL: %s\\n", SDL_GetError());
     return -1;
   }
 
@@ -52,14 +54,14 @@ int init_graphics() {
                          SDL_WINDOWPOS_CENTERED, WIN_WIDTH, WIN_HEIGHT, 0);
 
   if (!win) {
-    printf("error creating window: %s\n", SDL_GetError());
+    SDL_LogError(0, "error creating window: %s\n", SDL_GetError());
     SDL_Quit();
     return -1;
   }
 
   rend = SDL_CreateRenderer(win, -1, SDL_RENDERER_PRESENTVSYNC);
   if (!rend) {
-    printf("error creating renderer: %s\n", SDL_GetError());
+    SDL_LogError(0, "error creating renderer: %s\n", SDL_GetError());
     SDL_DestroyWindow(win);
     SDL_Quit();
     return -1;

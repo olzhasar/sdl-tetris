@@ -10,9 +10,9 @@ const int WIN_HEIGHT = (GRID_HEIGHT + 2) * BLOCK_SIZE;
 
 static SDL_Window *win;
 static SDL_Renderer *rend;
-static SDL_Surface *game_over_surface, *score_surface;
-static SDL_Texture *game_over_texture, *score_texture;
-static SDL_Rect game_over_rect, score_rect;
+static SDL_Surface *score_surface;
+static SDL_Texture *score_texture;
+static SDL_Rect score_rect;
 
 static SDL_Color White = {0xff, 0xff, 0xff};
 static SDL_Color Gray = {0xcc, 0xcc, 0xcc};
@@ -93,16 +93,32 @@ static void render_score(int score) {
   SDL_RenderCopy(rend, score_texture, NULL, &score_rect);
 }
 
-void render_game_over_message() {
-  game_over_surface = TTF_RenderText_Solid(Font_18, GAME_OVER_TEXT, White);
-  game_over_texture = SDL_CreateTextureFromSurface(rend, game_over_surface);
+static void render_game_over_text(const char *text, int y, TTF_Font *Font) {
+  SDL_Surface *surface = TTF_RenderText_Solid(Font, text, White);
+  SDL_Texture *texture = SDL_CreateTextureFromSurface(rend, surface);
 
-  game_over_rect.x = (WIN_WIDTH - game_over_surface->w) / 2;
-  game_over_rect.y = (WIN_HEIGHT - game_over_surface->h) / 2;
-  game_over_rect.w = game_over_surface->w;
-  game_over_rect.h = game_over_surface->h;
+  SDL_Rect rect;
+  rect.x = (WIN_WIDTH - surface->w) / 2;
+  rect.y = y;
+  rect.w = surface->w;
+  rect.h = surface->h;
 
-  SDL_RenderCopy(rend, game_over_texture, NULL, &game_over_rect);
+  SDL_RenderCopy(rend, texture, NULL, &rect);
+
+  SDL_FreeSurface(surface);
+  SDL_DestroyTexture(texture);
+}
+
+void render_game_over_message(int score) {
+  char score_str[SCORE_SIZE];
+  snprintf(score_str, SCORE_SIZE, "%i", score);
+
+  render_game_over_text("GAME OVER", WIN_HEIGHT / 2 - BLOCK_SIZE * 3, Font_32);
+  render_game_over_text("YOU SCORED:", WIN_HEIGHT / 2 - BLOCK_SIZE * 2,
+                        Font_32);
+  render_game_over_text(score_str, WIN_HEIGHT / 2, Font_32);
+  render_game_over_text("Press any key to restart...",
+                        WIN_HEIGHT / 2 + BLOCK_SIZE * 2, Font_18);
   SDL_RenderPresent(rend);
 }
 
@@ -142,9 +158,7 @@ void render_frame(int score) {
 }
 
 void release_resources() {
-  SDL_FreeSurface(game_over_surface);
   SDL_FreeSurface(score_surface);
-  SDL_DestroyTexture(game_over_texture);
   SDL_DestroyTexture(score_texture);
 
   SDL_DestroyRenderer(rend);

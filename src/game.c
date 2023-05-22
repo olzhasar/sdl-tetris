@@ -264,7 +264,7 @@ void handle_input_event(enum InputEvent event) {
 
 void update_frame() {
   if (game_over) {
-    render_game_over_message();
+    render_game_over_message(score);
     return;
   }
 

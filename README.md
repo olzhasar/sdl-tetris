@@ -2,6 +2,14 @@
 
 An implementation of the classic [Tetris game](https://en.wikipedia.org/wiki/Tetris) in C programming language using [SDL-2 library](https://www.libsdl.org/)
 
+## Webassembly
+
+The game has been ported to Webassembly using [Emscripten](https://emscripten.org/)
+
+Check out the [Live Demo](https://olzhasar.github.io/sdl-tetris/)
+
+## Desktop preview
+
 ![Preview](preview.gif)
 
 ## Installation

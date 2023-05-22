@@ -46,5 +46,5 @@ make
 
 ## TODO
 
-- Different block colors
-- Port to WASM
+- Levels
+- Sounds

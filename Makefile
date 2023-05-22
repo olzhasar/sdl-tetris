@@ -12,6 +12,13 @@ OBJS := $(SRCS:.c=.o)
 
 EXEC := game
 
+# Emscripten
+EMCC := emcc
+
+EM_BUILD_DIR := dist
+
+EMFLAGS = -sUSE_SDL=2 -sUSE_SDL_TTF=2 -sALLOW_MEMORY_GROWTH -s -ggdb3 -s -O0 -s --std=c99 --preload-file src/assets/font.ttf
+
 # default recipe
 all: compile_run
 
@@ -29,5 +36,26 @@ debug:
 
 clean:
 	rm -f $(EXEC) $(OBJS)
+	rm -rf $(EM_BUILD_DIR)
 
-.PHONY: all clean compile
+wasm_build_dir:
+	mkdir -p $(EM_BUILD_DIR)
+
+wasm: wasm_build_dir
+	$(EMCC) $(SRCS) $(EMFLAGS) -o $(EM_BUILD_DIR)/index.html
+
+wasm_serve: clean wasm
+	open http://localhost:8000
+	python -m http.server -d $(EM_BUILD_DIR) 8000
+
+publish: clean wasm
+	git checkout gh-pages
+	git rm -rf src/ Makefile README.md preview.gif
+	git mv -f dist/* .
+	git rm -rf dist/
+	git add .
+	git commit -m "Deploy"
+	git push --force origin gh-pages
+	git checkout master
+
+.PHONY: all clean compile compile_run debug wasm wasm_serve wasm_build_dir publish

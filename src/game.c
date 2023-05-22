@@ -4,7 +4,7 @@ enum Action current_action = MOVE_DOWN;
 int game_over = 0;
 int score = 0;
 
-int WAIT = 32;
+int fall_freq = 32;
 int iteration = 0;
 
 // Grid is represented as m x n matrix binary matrix. 0 - free cell, 1 -
@@ -19,13 +19,14 @@ int to_destroy[GRID_HEIGHT] = {0};
 int current_shape[8] = {0};
 int current_shape_type;
 
-// Current rotation identifier 0-4
+// Current rotation identifier [0-4)
 int current_rotation = 0;
 // Current shape coordinates
 int current_x = 0, current_y = 0;
 
 // Represent shapes as an array of 8 ints.
 // Each int pair represents the shift from the shape position over x and y axis
+const int N_SHAPES = 7;
 int SHAPES[7][8] = {
     {0, 0, 1, 0, 0, 1, 1, 1},   // O
     {0, 0, -1, 0, 1, 0, 0, 1},  // T
@@ -36,6 +37,12 @@ int SHAPES[7][8] = {
     {0, 0, -1, 0, 0, 1, 1, 1},  // Z
 };
 
+const int FRAME_DELAY = 16; // 1000 / 16 ~= 60fps
+const int RESTART_DELAY = 300;
+
+const int SCORE_SINGLE = 1;
+const int SCORE_LINE = 100;
+
 void restart_game() {
   for (int i = 0; i < GRID_WIDTH; i++) {
     for (int j = 0; j < GRID_HEIGHT; j++) {
@@ -45,7 +52,7 @@ void restart_game() {
 
   game_over = 0;
 
-  SDL_Delay(300);
+  SDL_Delay(RESTART_DELAY);
 }
 
 void end_game() {
@@ -202,8 +209,8 @@ void move_side(int n) {
 }
 
 void move_down() {
-  // Move only once in WAIT times
-  if (iteration < WAIT) {
+  // Move only once in `fall_freq` times
+  if (iteration < fall_freq) {
     return;
   }
 
@@ -243,7 +250,7 @@ void handle_current_action() {
     current_action = MOVE_DOWN;
     break;
   case FALL:
-    iteration = WAIT;
+    iteration = fall_freq;
     move_down();
     break;
   }
@@ -276,7 +283,7 @@ void update_frame() {
     draw_block(x, y, 0);
   }
 
-  present_screen();
+  render_frame(score);
 }
 
 void init_game() {
@@ -291,7 +298,7 @@ void game_loop() {
   clean_destroyed_blocks();
   update_frame();
   iteration++;
-  SDL_Delay(16);
+  SDL_Delay(FRAME_DELAY);
 }
 
 void terminate_game() { release_resources(); }

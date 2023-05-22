@@ -7,7 +7,7 @@ SDL_Surface *game_over_surface, *score_surface;
 SDL_Texture *game_over_texture, *score_texture;
 SDL_Rect game_over_rect, score_rect;
 
-SDL_Color White = {255, 255, 255};
+SDL_Color White = {0xff, 0xff, 0xff};
 SDL_Color Gray = {0xcc, 0xcc, 0xcc};
 TTF_Font *Font_18;
 TTF_Font *Font_32;
@@ -49,10 +49,10 @@ int init_graphics() {
   return 0;
 }
 
-void render_score() {
+void render_score(int score) {
   char score_str[12];
 
-  sprintf(score_str, "%i", score);
+  snprintf(score_str, 12, "%i", score);
 
   score_surface = TTF_RenderText_Solid(Font_32, score_str, Gray);
   score_texture = SDL_CreateTextureFromSurface(rend, score_surface);
@@ -114,8 +114,8 @@ void clear_screen() {
   SDL_RenderClear(rend);
 }
 
-void present_screen() {
-  render_score();
+void render_frame(int score) {
+  render_score(score);
   SDL_RenderPresent(rend);
 }
 

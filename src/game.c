@@ -281,7 +281,9 @@ void update_frame() {
     x = current_shape[i * 2] + current_x;
     y = current_shape[i * 2 + 1] + current_y;
 
-    draw_block(x, y, 0);
+    if (y >= 0) { // skip overflowed
+      draw_block(x, y, 0);
+    }
   }
 
   render_frame(score);

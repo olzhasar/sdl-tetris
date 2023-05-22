@@ -42,20 +42,23 @@ wasm_build_dir:
 	mkdir -p $(EM_BUILD_DIR)
 
 wasm: wasm_build_dir
-	$(EMCC) $(SRCS) $(EMFLAGS) -o $(EM_BUILD_DIR)/index.html
+	cp index.html $(EM_BUILD_DIR)
+	$(EMCC) $(SRCS) $(EMFLAGS) -o $(EM_BUILD_DIR)/index.js
 
 wasm_serve: clean wasm
 	open http://localhost:8000
 	python -m http.server -d $(EM_BUILD_DIR) 8000
 
-publish: clean wasm
+publish:
 	git checkout gh-pages
+	$(MAKE) clean
+	$(MAKE) wasm
 	git rm -rf src/ Makefile README.md preview.gif
-	git mv -f dist/* .
+	mv -f dist/* .
 	git rm -rf dist/
-	git add .
+	git add --all
 	git commit -m "Deploy"
-	git push --force origin gh-pages
+	git push origin gh-pages
 	git checkout master
 
 .PHONY: all clean compile compile_run debug wasm wasm_serve wasm_build_dir publish

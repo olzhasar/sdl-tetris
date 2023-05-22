@@ -1,7 +1,13 @@
 #include "graphics.h"
 
 #define WIN_TITLE "Tetris"
+
+#ifdef __ENSCRIPTEN__
+#define FONT_PATH "font.ttf"
+#else
 #define FONT_PATH "src/assets/font.ttf"
+#endif
+
 #define SCORE_SIZE 7
 
 const int WIN_WIDTH = (GRID_WIDTH + 5) * BLOCK_SIZE;

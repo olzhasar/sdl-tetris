@@ -300,33 +300,31 @@ void update_frame() {
 }
 
 int init_game() {
-  srand(time(NULL)); // seed the random number generator
-
   spawn_shape();
 
   return init_graphics();
 }
 
 int game_loop() {
-  while (1) {
-    enum InputEvent event = listen_for_input(game_over);
-    if (event == QUIT) {
-      return 0;
-    }
-
-    if (game_over) {
-      if (event > 0) {
-        restart_game();
-      }
-    } else {
-      handle_input_event(event);
-      clean_destroyed_blocks();
-      update_frame();
-      iteration++;
-
-      SDL_Delay(FRAME_DELAY);
-    }
+  enum InputEvent event = listen_for_input(game_over);
+  if (event == QUIT) {
+    return 1;
   }
+
+  if (game_over) {
+    if (event > 0) {
+      restart_game();
+    }
+  } else {
+    handle_input_event(event);
+    clean_destroyed_blocks();
+    update_frame();
+    iteration++;
+
+    SDL_Delay(FRAME_DELAY);
+  }
+
+  return 0;
 }
 
 int terminate_game() {

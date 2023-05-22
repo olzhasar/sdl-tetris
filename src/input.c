@@ -1,48 +1,39 @@
-#include "game.h"
+#include "input.h"
 #include <SDL_keycode.h>
 
-int close_requested = 0;
-
-void handle_key_down(SDL_Keycode key_code) {
+int handle_key_down(SDL_Keycode key_code) {
   switch (key_code) {
+  case SDLK_ESCAPE:
+    return QUIT;
   case SDLK_LEFT:
   case SDLK_a:
-    current_action = MOVE_LEFT;
-    break;
+    return LEFT;
   case SDLK_RIGHT:
   case SDLK_d:
-    current_action = MOVE_RIGHT;
-    break;
+    return RIGHT;
   case SDLK_UP:
   case SDLK_w:
-    current_action = ROTATE;
-    break;
+    return ROTATE;
   case SDLK_DOWN:
   case SDLK_s:
+    return SOFT_DROP;
   case SDLK_SPACE:
-    current_action = FALL;
+    return HARD_DROP;
   }
+  return ANY_INPUT;
 }
 
-void listen_for_input() {
+int listen_for_input(int game_over) {
   SDL_Event event;
 
   while (SDL_PollEvent(&event)) {
     if (event.type == SDL_QUIT) {
-      close_requested = 1;
+      return QUIT;
     }
     if (event.type == SDL_KEYDOWN) {
-      SDL_Keycode key_code = event.key.keysym.sym;
-
-      if (key_code == SDLK_ESCAPE) {
-        close_requested = 1;
-      } else {
-        if (!game_over) {
-          handle_key_down(key_code);
-        } else {
-          restart_game();
-        }
-      }
+      return handle_key_down(event.key.keysym.sym);
     }
   }
+
+  return NO_INPUT;
 }

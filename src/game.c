@@ -1,10 +1,15 @@
 #include "game.h"
+#include "definitions.h"
+#include "input.h"
 
-enum Action current_action = MOVE_DOWN;
+const int REGULAR_FREQ = 32;
+const int SOFT_FREQ = 4;
+const int HARD_FREQ = 1;
+
 int game_over = 0;
 int score = 0;
 
-int fall_freq = 32;
+int drop_freq = REGULAR_FREQ;
 int iteration = 0;
 
 // Grid is represented as m x n matrix binary matrix. 0 - free cell, 1 -
@@ -137,7 +142,7 @@ void lock_shape() {
 
   iteration = 0;
   score += SCORE_SINGLE;
-  current_action = MOVE_DOWN;
+  drop_freq = REGULAR_FREQ;
 }
 
 int detect_collision(int x, int y) {
@@ -157,6 +162,8 @@ int detect_collision(int x, int y) {
 }
 
 void rotate_shape() {
+  drop_freq = REGULAR_FREQ;
+
   if (current_shape_type == 0) {
     return; // O-shape should not be rotated
   }
@@ -195,6 +202,7 @@ void rotate_shape() {
 }
 
 void move_side(int n) {
+  drop_freq = REGULAR_FREQ; // Stop fast dropping fast
   int x, y;
 
   for (int i = 0; i < 4; i++) {
@@ -210,8 +218,8 @@ void move_side(int n) {
 }
 
 void move_down() {
-  // Move only once in `fall_freq` times
-  if (iteration < fall_freq) {
+  // Move only once in `drop_freq` times
+  if (iteration < drop_freq) {
     return;
   }
 
@@ -233,28 +241,24 @@ void move_down() {
   current_y += 1;
 }
 
-void handle_current_action() {
-  switch (current_action) {
-  case MOVE_DOWN:
-    move_down();
-    break;
-  case MOVE_LEFT:
-    move_side(-1);
-    current_action = MOVE_DOWN;
-    break;
-  case MOVE_RIGHT:
-    move_side(1);
-    current_action = MOVE_DOWN;
-    break;
+void handle_input_event(enum InputEvent event) {
+  switch (event) {
+  case LEFT:
+    return move_side(-1);
+  case RIGHT:
+    return move_side(1);
   case ROTATE:
-    rotate_shape();
-    current_action = MOVE_DOWN;
+    return rotate_shape();
+  case HARD_DROP:
+    drop_freq = HARD_FREQ;
     break;
-  case FALL:
-    iteration = fall_freq;
-    move_down();
+  case SOFT_DROP:
+    drop_freq = SOFT_FREQ;
+    break;
+  default:
     break;
   }
+  move_down();
 }
 
 void update_frame() {
@@ -289,19 +293,37 @@ void update_frame() {
   render_frame(score);
 }
 
-void init_game() {
+int init_game() {
   srand(time(NULL)); // seed the random number generator
 
   spawn_shape();
-  init_graphics();
+
+  return init_graphics();
 }
 
-void game_loop() {
-  handle_current_action();
-  clean_destroyed_blocks();
-  update_frame();
-  iteration++;
-  SDL_Delay(FRAME_DELAY);
+int game_loop() {
+  while (1) {
+    enum InputEvent event = listen_for_input(game_over);
+    if (event == QUIT) {
+      return 0;
+    }
+
+    if (game_over) {
+      if (event > 0) {
+        restart_game();
+      }
+    } else {
+      handle_input_event(event);
+      clean_destroyed_blocks();
+      update_frame();
+      iteration++;
+
+      SDL_Delay(FRAME_DELAY);
+    }
+  }
 }
 
-void terminate_game() { release_resources(); }
+int terminate_game() {
+  release_resources();
+  return 0;
+}

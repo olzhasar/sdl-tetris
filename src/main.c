@@ -1,19 +1,18 @@
 #include "game.h"
-#include "input.h"
 
 int main(void) {
-  init_game();
+  if (init_game() != 0) {
+    printf("Failed to start game\n");
+    return 1;
+  };
 
-  while (!close_requested) {
+  if (game_loop() != 0) {
+    printf("Unexpected error occured\n");
+  };
 
-    if (!game_over) {
-      game_loop();
-    }
-
-    listen_for_input();
-  }
-
-  terminate_game();
+  if (terminate_game() != 0) {
+    printf("Error while terminating game\n");
+  };
 
   return 0;
 }

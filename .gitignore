@@ -55,5 +55,8 @@ dkms.conf
 # Cache
 .cache/
 
+# WASM build
+dist/
+
 # Bear JSON compiled db
 compile_commands.json

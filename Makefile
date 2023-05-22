@@ -51,14 +51,15 @@ wasm_serve: clean wasm
 
 publish:
 	git checkout gh-pages
+	git reset --hard master
 	$(MAKE) clean
 	$(MAKE) wasm
-	git rm -rf src/ README.md preview.gif
 	mv -f dist/* .
-	git rm -rf dist/
+	rm -rf dist/
+	git rm -rf src/ README.md preview.gif
 	git add --all
 	git commit -m "Deploy"
-	git push origin gh-pages
+	git push --force origin gh-pages
 	git checkout master
 
 .PHONY: all clean compile compile_run debug wasm wasm_serve wasm_build_dir publish

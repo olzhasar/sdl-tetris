@@ -1,7 +1,7 @@
 #include "definitions.h"
 #include "game.h"
 
-int main(void) {
+int main(int argc, char **argv) {
   if (init_game() != 0) {
     printf("Failed to start game\n");
     return 1;

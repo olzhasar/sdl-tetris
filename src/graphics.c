@@ -57,8 +57,7 @@ int init_graphics() {
     return -1;
   }
 
-  Uint32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
-  rend = SDL_CreateRenderer(win, -1, render_flags);
+  rend = SDL_CreateRenderer(win, -1, SDL_RENDERER_PRESENTVSYNC);
   if (!rend) {
     printf("error creating renderer: %s\n", SDL_GetError());
     SDL_DestroyWindow(win);

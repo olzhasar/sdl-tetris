@@ -13,16 +13,23 @@ static int score = 0;
 static int drop_freq = REGULAR_FREQ;
 static int iteration = 0;
 
-// Grid is represented as m x n matrix binary matrix. 0 - free cell, 1 -
-// occupied
+// Grid is represented as m x n int matrix. Values are color codes for occupied
+// cells or 0 for empty cells
 static int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
 // Array of rows that need to be destroyed
 static int to_destroy[GRID_HEIGHT] = {0};
 
+static const int N_COLORS = 13;
+static const int COLORS[13] = {
+    0xFFC82E, 0xFEFB34, 0x53DA3F, 0x01EDFA, 0xDD0AB2, 0xEA141C, 0xFE4819,
+    0xFF910C, 0x39892F, 0x0077D3, 0x78256F, 0x2E2E84, 0x485DC5,
+};
+
 // Array of blocks in the current shape
-// Each value pair corresponds to the shift from the shape position over x and y
-// axis
-static int current_shape[8] = {0};
+// Each value pair up to index 8 corresponds to the shift from the shape
+// position over x and y axis
+// Last value is the color of the current shape
+static int current_shape[9] = {0};
 static int current_shape_type;
 
 // Current rotation identifier [0-4)
@@ -74,6 +81,8 @@ void spawn_shape() {
     current_shape[i] = SHAPES[current_shape_type][i];
   }
 
+  current_shape[8] = COLORS[rand() % N_COLORS];
+
   current_x = GRID_WIDTH / 2;
   current_y = 0;
   current_rotation = 0;
@@ -113,7 +122,7 @@ int row_is_full(int y) {
   }
 
   for (int i = 0; i < GRID_WIDTH; i++) {
-    if (!grid[i][y]) {
+    if (grid[i][y] == 0) {
       return 0;
     }
   }
@@ -131,7 +140,7 @@ void lock_shape() {
     y = current_shape[i * 2 + 1] + current_y;
 
     if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
-      grid[x][y] = 1;
+      grid[x][y] = current_shape[8];
     }
 
     if (!row_is_full(y)) {
@@ -272,11 +281,7 @@ void update_frame() {
 
   for (int i = 0; i < GRID_WIDTH; ++i) {
     for (int j = 0; j < GRID_HEIGHT; ++j) {
-      if (grid[i][j]) {
-        draw_block(i, j, 0);
-      } else {
-        draw_block(i, j, 1);
-      }
+      draw_block(i, j, grid[i][j]);
     }
   }
 
@@ -287,7 +292,7 @@ void update_frame() {
     y = current_shape[i * 2 + 1] + current_y;
 
     if (y >= 0) { // skip overflowed
-      draw_block(x, y, 0);
+      draw_block(x, y, current_shape[8]);
     }
   }
 

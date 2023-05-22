@@ -1,7 +1,6 @@
 #include "graphics.h"
 
 #define WIN_TITLE "Tetris"
-#define GAME_OVER_TEXT "Game Over. Press any key to restart"
 #define FONT_PATH "src/assets/font.ttf"
 #define SCORE_SIZE 7
 
@@ -122,7 +121,7 @@ void render_game_over_message(int score) {
   SDL_RenderPresent(rend);
 }
 
-void draw_block(int x, int y, bool empty) {
+void draw_block(int x, int y, int color) {
   SDL_Rect outer;
   SDL_Rect inner;
 
@@ -136,13 +135,20 @@ void draw_block(int x, int y, bool empty) {
   inner.w = BLOCK_SIZE - 2;
   inner.h = BLOCK_SIZE - 2;
 
-  SDL_SetRenderDrawColor(rend, 0xdd, 0xdd, 0xdd, 0xff);
+  SDL_SetRenderDrawColor(rend, 0x0c, 0x0c, 0x0c, 0xff);
   SDL_RenderFillRect(rend, &outer);
 
-  if (!empty) {
-    SDL_SetRenderDrawColor(rend, 0x00, 0x00, 0xff, 0xFF);
+  if (color == 0) {
+    SDL_SetRenderDrawColor(rend, 0x11, 0x11, 0x11, 0xff);
   } else {
-    SDL_SetRenderDrawColor(rend, 0xcc, 0xcc, 0xcc, 0xFF);
+    unsigned int r, g, b;
+
+    // Shift bits and extract 8 least significant bits for each color;
+    r = (color >> 16) & 0xFF;
+    g = (color >> 8) & 0xFF;
+    b = color & 0xFF;
+
+    SDL_SetRenderDrawColor(rend, r, g, b, 0xff);
   }
   SDL_RenderFillRect(rend, &inner);
 }

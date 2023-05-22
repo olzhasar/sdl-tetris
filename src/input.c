@@ -1,4 +1,5 @@
 #include "input.h"
+#include "definitions.h"
 #include <SDL_keycode.h>
 
 int handle_key_down(SDL_Keycode key_code) {

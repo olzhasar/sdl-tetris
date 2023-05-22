@@ -1,5 +1,6 @@
 #include "game.h"
 #include "definitions.h"
+#include "graphics.h"
 #include "input.h"
 
 const int REGULAR_FREQ = 32;

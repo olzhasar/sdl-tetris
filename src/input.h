@@ -1,5 +1,3 @@
-#include "definitions.h"
-
 int listen_for_input(int game_over);
 
 enum InputEvent {

@@ -3,37 +3,37 @@
 #include "graphics.h"
 #include "input.h"
 
-const int REGULAR_FREQ = 32;
-const int SOFT_FREQ = 4;
-const int HARD_FREQ = 1;
+static const int REGULAR_FREQ = 32;
+static const int SOFT_FREQ = 4;
+static const int HARD_FREQ = 1;
 
-int game_over = 0;
-int score = 0;
+static int game_over = 0;
+static int score = 0;
 
-int drop_freq = REGULAR_FREQ;
-int iteration = 0;
+static int drop_freq = REGULAR_FREQ;
+static int iteration = 0;
 
 // Grid is represented as m x n matrix binary matrix. 0 - free cell, 1 -
 // occupied
-int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
+static int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
 // Array of rows that need to be destroyed
-int to_destroy[GRID_HEIGHT] = {0};
+static int to_destroy[GRID_HEIGHT] = {0};
 
 // Array of blocks in the current shape
 // Each value pair corresponds to the shift from the shape position over x and y
 // axis
-int current_shape[8] = {0};
-int current_shape_type;
+static int current_shape[8] = {0};
+static int current_shape_type;
 
 // Current rotation identifier [0-4)
-int current_rotation = 0;
+static int current_rotation = 0;
 // Current shape coordinates
-int current_x = 0, current_y = 0;
+static int current_x = 0, current_y = 0;
 
 // Represent shapes as an array of 8 ints.
 // Each int pair represents the shift from the shape position over x and y axis
-const int N_SHAPES = 7;
-int SHAPES[7][8] = {
+static const int N_SHAPES = 7;
+static int SHAPES[7][8] = {
     {0, 0, 1, 0, 0, 1, 1, 1},   // O
     {0, 0, -1, 0, 1, 0, 0, 1},  // T
     {0, 0, 0, -1, 0, 1, 1, 1},  // L
@@ -43,11 +43,11 @@ int SHAPES[7][8] = {
     {0, 0, -1, 0, 0, 1, 1, 1},  // Z
 };
 
-const int FRAME_DELAY = 16; // 1000 / 16 ~= 60fps
-const int RESTART_DELAY = 300;
+static const int FRAME_DELAY = 16; // 1000 / 16 ~= 60fps
+static const int RESTART_DELAY = 300;
 
-const int SCORE_SINGLE = 1;
-const int SCORE_LINE = 100;
+static const int SCORE_SINGLE = 1;
+static const int SCORE_LINE = 100;
 
 void restart_game() {
   for (int i = 0; i < GRID_WIDTH; i++) {

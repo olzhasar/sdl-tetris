@@ -2,7 +2,7 @@
 #include "definitions.h"
 #include <SDL_keycode.h>
 
-int handle_key_down(SDL_Keycode key_code) {
+static int handle_key_down(SDL_Keycode key_code) {
   switch (key_code) {
   case SDLK_ESCAPE:
     return QUIT;

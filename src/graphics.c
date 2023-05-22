@@ -8,18 +8,18 @@
 const int WIN_WIDTH = (GRID_WIDTH + 5) * BLOCK_SIZE;
 const int WIN_HEIGHT = (GRID_HEIGHT + 2) * BLOCK_SIZE;
 
-SDL_Window *win;
-SDL_Renderer *rend;
-SDL_Surface *game_over_surface, *score_surface;
-SDL_Texture *game_over_texture, *score_texture;
-SDL_Rect game_over_rect, score_rect;
+static SDL_Window *win;
+static SDL_Renderer *rend;
+static SDL_Surface *game_over_surface, *score_surface;
+static SDL_Texture *game_over_texture, *score_texture;
+static SDL_Rect game_over_rect, score_rect;
 
-SDL_Color White = {0xff, 0xff, 0xff};
-SDL_Color Gray = {0xcc, 0xcc, 0xcc};
-TTF_Font *Font_18;
-TTF_Font *Font_32;
+static SDL_Color White = {0xff, 0xff, 0xff};
+static SDL_Color Gray = {0xcc, 0xcc, 0xcc};
+static TTF_Font *Font_18;
+static TTF_Font *Font_32;
 
-int init_fonts() {
+static int init_fonts() {
   if (TTF_Init() != 0) {
     printf("error initializing TTF: %s\\n", TTF_GetError());
     return -1;
@@ -78,7 +78,7 @@ int init_graphics() {
   return 0;
 }
 
-void render_score(int score) {
+static void render_score(int score) {
   char score_str[SCORE_SIZE];
   snprintf(score_str, SCORE_SIZE, "%i", score);
 

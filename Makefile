@@ -1,37 +1,33 @@
-# A simple Makefile for compiling small SDL projects
-
-# set the compiler
 CC := gcc
 
-# set the compiler flags
 CFLAGS := `sdl2-config --cflags` -ggdb3 -O0 --std=c99 -Wall
 LDFLAGS := `sdl2-config --libs` -lm -lSDL2_ttf
+EXTRA_FLAGS :=
 
-# add header files here
 HDRS :=
 
-# add source files here
 SRCS := $(wildcard src/*.c)
 
-# generate names of object files
 OBJS := $(SRCS:.c=.o)
 
-# name of executable
 EXEC := game
 
 # default recipe
-all: $(EXEC)
+all: compile_run
 
-# recipe for building the final executable
-$(EXEC): $(OBJS) $(HDRS) Makefile
-	$(CC) -o $@ $(OBJS) $(LDFLAGS)
+compile_run: compile
+	./$(EXEC)
 
-# recipe for building object files
+compile: $(OBJS) $(HDRS) Makefile
+	$(CC) -o $(EXEC) $(OBJS) $(LDFLAGS) $(EXTRA_FLAGS)
+
+debug:
+	$(MAKE) EXTRA_FLAGS=-fsanitize=address,undefined
+
 %.o: %.c $(HDRS) Makefile
-	$(CC) -o $@ -c $< $(CFLAGS)
+	$(CC) -o $@ -c $< $(CFLAGS) $(EXTRA_FLAGS)
 
-# recipe to clean the workspace
 clean:
 	rm -f $(EXEC) $(OBJS)
 
-.PHONY: all clean
+.PHONY: all clean compile

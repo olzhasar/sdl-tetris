@@ -20,17 +20,11 @@ On MacOS you can use Homebrew:
 brew install sdl2 sdl2_ttf
 ```
 
-Compile the project code
+Compile and run the project code with make
 
 ```sh
 cd sdl-tetris
 make
-```
-
-Run the executable
-
-```sh
-./game
 ```
 
 ## Controls

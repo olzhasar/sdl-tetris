@@ -32,7 +32,8 @@ make
 - Rotate - Up arrow, W
 - Left - Left arrow, A
 - Right - Right arrow, D
-- Drop - Down arrow, S, Space
+- Soft Drop - Down arrow, S
+- Hard drop - Space
 - Quit - ESC
 
 ## TODO

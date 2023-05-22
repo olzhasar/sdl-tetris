@@ -53,7 +53,7 @@ publish:
 	git checkout gh-pages
 	$(MAKE) clean
 	$(MAKE) wasm
-	git rm -rf src/ Makefile README.md preview.gif
+	git rm -rf src/ README.md preview.gif
 	mv -f dist/* .
 	git rm -rf dist/
 	git add --all

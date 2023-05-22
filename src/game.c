@@ -51,6 +51,7 @@ void restart_game() {
   };
 
   game_over = 0;
+  score = 0;
 
   SDL_Delay(RESTART_DELAY);
 }

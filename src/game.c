@@ -3,21 +3,25 @@
 #include "graphics.h"
 #include "input.h"
 
-static const int REGULAR_FREQ = 32;
-static const int SOFT_FREQ = 4;
-static const int HARD_FREQ = 1;
-
-static int game_over = 0;
-static int score = 0;
-
-static int drop_freq = REGULAR_FREQ;
-static int iteration = 0;
-
 // Grid is represented as m x n int matrix. Values are color codes for occupied
 // cells or 0 for empty cells
 static int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
 // Array of rows that need to be destroyed
 static int to_destroy[GRID_HEIGHT] = {0};
+
+static int game_over = 0;
+static int score = 0;
+
+static int iteration = 0;
+static int lines_cleared = 0;
+
+static int current_level = 1;
+static int fall_freq = 48;
+static const int MAX_LEVEL_FREQ = 15;
+static const int LEVEL_FREQS[15] = {48, 43, 38, 33, 28, 23, 18, 13,
+                                    8,  6,  5,  4,  3,  2,  1};
+static const int SOFT_FREQ = 3;
+static const int HARD_FREQ = 1;
 
 static const int N_COLORS = 13;
 static const int COLORS[13] = {
@@ -54,6 +58,24 @@ static const int RESTART_DELAY = 300;
 static const int SCORE_SINGLE = 1;
 static const int SCORE_LINE = 100;
 
+static int get_curr_fall_freq() {
+  if (current_level >= MAX_LEVEL_FREQ) {
+    return LEVEL_FREQS[MAX_LEVEL_FREQ - 1];
+  }
+  return LEVEL_FREQS[current_level];
+};
+
+void reset_fall_freq() { fall_freq = get_curr_fall_freq(); }
+
+void update_fall_freq(int new) {
+  int calculated = get_curr_fall_freq();
+  if (calculated < new) {
+    fall_freq = calculated;
+  } else {
+    fall_freq = new;
+  }
+}
+
 void restart_game() {
   for (int i = 0; i < GRID_WIDTH; i++) {
     for (int j = 0; j < GRID_HEIGHT; j++) {
@@ -62,6 +84,8 @@ void restart_game() {
   };
 
   game_over = 0;
+  current_level = 0;
+  lines_cleared = 0;
   score = 0;
 
   SDL_Delay(RESTART_DELAY);
@@ -90,6 +114,10 @@ void destroy_row(int row) {
     for (int i = 0; i < GRID_WIDTH; i++) {
       grid[i][j] = grid[i][j - 1];
     }
+  }
+  lines_cleared++;
+  if (lines_cleared % 10 == 0) {
+    current_level++;
   }
 }
 
@@ -149,7 +177,8 @@ void lock_shape() {
 
   iteration = 0;
   score += SCORE_SINGLE;
-  drop_freq = REGULAR_FREQ;
+  reset_fall_freq();
+  spawn_shape();
 }
 
 int detect_collision(int x, int y) {
@@ -169,7 +198,7 @@ int detect_collision(int x, int y) {
 }
 
 void rotate_shape() {
-  drop_freq = REGULAR_FREQ;
+  reset_fall_freq();
 
   if (current_shape_type == 0) {
     return; // O-shape should not be rotated
@@ -196,12 +225,13 @@ void rotate_shape() {
   }
 }
 
-void move_side(int n) {
-  drop_freq = REGULAR_FREQ; // Stop fast dropping fast
+void move_side(int direction) {
+  reset_fall_freq();
+
   int x, y;
 
   for (int i = 0; i < 4; i++) {
-    x = current_shape[i * 2] + current_x + n;
+    x = current_shape[i * 2] + current_x + direction;
     y = current_shape[i * 2 + 1] + current_y;
 
     if (detect_collision(x, y)) {
@@ -209,12 +239,13 @@ void move_side(int n) {
     }
   }
 
-  current_x += n;
+  current_x += direction;
 }
 
-void move_down() {
-  // Move only once in `drop_freq` times
-  if (iteration < drop_freq) {
+void fall() {
+  iteration++;
+  // Fall in `fall_freq` times
+  if (iteration < fall_freq) {
     return;
   }
 
@@ -227,9 +258,7 @@ void move_down() {
     y = current_shape[i * 2 + 1] + current_y + 1;
 
     if (detect_collision(x, y)) {
-      lock_shape();
-      spawn_shape();
-      return;
+      return lock_shape();
     }
   }
 
@@ -245,15 +274,12 @@ void handle_input_event(enum InputEvent event) {
   case ROTATE:
     return rotate_shape();
   case HARD_DROP:
-    drop_freq = HARD_FREQ;
-    break;
+    return update_fall_freq(HARD_FREQ);
   case SOFT_DROP:
-    drop_freq = SOFT_FREQ;
-    break;
+    return update_fall_freq(SOFT_FREQ);
   default:
-    break;
+    return;
   }
-  move_down();
 }
 
 void update_frame() {
@@ -302,9 +328,9 @@ int game_loop() {
     }
   } else {
     handle_input_event(event);
+    fall();
     clean_destroyed_blocks();
     update_frame();
-    iteration++;
 
     SDL_Delay(FRAME_DELAY);
   }

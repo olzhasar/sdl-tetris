@@ -102,13 +102,13 @@ static void render_score(int score, int level) {
   char score_str[SCORE_SIZE];
   snprintf(score_str, SCORE_SIZE, "%i", score);
 
-  render_right_text("SCORE", BLOCK_SIZE, Font_32);
+  render_right_text("SCORE", BLOCK_SIZE, Font_18);
   render_right_text(score_str, BLOCK_SIZE * 2, Font_32);
 
   char level_str[3];
   snprintf(level_str, 3, "%i", level);
 
-  render_right_text("LEVEL", BLOCK_SIZE * 6, Font_32);
+  render_right_text("LEVEL", BLOCK_SIZE * 6, Font_18);
   render_right_text(level_str, BLOCK_SIZE * 7, Font_32);
 }
 

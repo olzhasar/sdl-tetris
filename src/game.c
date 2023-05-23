@@ -32,8 +32,6 @@ static const int COLORS[13] = {
 static int current_shape[9] = {0};
 static int current_shape_type;
 
-// Current rotation identifier [0-4)
-static int current_rotation = 0;
 // Current shape coordinates
 static int current_x = 0, current_y = 0;
 
@@ -85,7 +83,6 @@ void spawn_shape() {
 
   current_x = GRID_WIDTH / 2;
   current_y = 0;
-  current_rotation = 0;
 }
 
 void destroy_row(int row) {
@@ -180,18 +177,11 @@ void rotate_shape() {
 
   int temp[8] = {0};
 
-  int multiplier;
   int x, y;
 
-  if (current_rotation % 2 == 0) {
-    multiplier = -1;
-  } else {
-    multiplier = 1;
-  }
-
   for (int i = 0; i < 4; i++) {
-    temp[i * 2] = current_shape[i * 2 + 1] * multiplier;
-    temp[i * 2 + 1] = current_shape[i * 2] * multiplier;
+    temp[i * 2] = current_shape[i * 2 + 1];
+    temp[i * 2 + 1] = -current_shape[i * 2];
 
     x = temp[i * 2] + current_x;
     y = temp[i * 2 + 1] + current_y;
@@ -203,11 +193,6 @@ void rotate_shape() {
 
   for (int i = 0; i < 8; i++) {
     current_shape[i] = temp[i];
-  }
-
-  current_rotation += 1;
-  if (current_rotation == 4) {
-    current_rotation = 0;
   }
 }
 

@@ -46,5 +46,5 @@ make
 
 ## TODO
 
-- Levels
+- Next shape preview
 - Sounds

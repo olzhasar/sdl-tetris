@@ -15,7 +15,7 @@ static int score = 0;
 static int iteration = 0;
 static int lines_cleared = 0;
 
-static int current_level = 1;
+static int current_level = 0;
 static int fall_freq = 48;
 static const int MAX_LEVEL_FREQ = 15;
 static const int LEVEL_FREQS[15] = {48, 43, 38, 33, 28, 23, 18, 13,
@@ -307,7 +307,7 @@ void update_frame() {
     }
   }
 
-  render_frame(score);
+  render_frame(score, current_level);
 }
 
 int init_game() {

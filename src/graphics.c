@@ -9,15 +9,13 @@
 #endif
 
 #define SCORE_SIZE 7
+#define LEVEL_SIZE 3
 
 const int WIN_WIDTH = (GRID_WIDTH + 5) * BLOCK_SIZE;
 const int WIN_HEIGHT = (GRID_HEIGHT + 2) * BLOCK_SIZE;
 
 static SDL_Window *win;
 static SDL_Renderer *rend;
-static SDL_Surface *score_surface;
-static SDL_Texture *score_texture;
-static SDL_Rect score_rect;
 
 static SDL_Color White = {0xff, 0xff, 0xff};
 static SDL_Color Gray = {0xcc, 0xcc, 0xcc};
@@ -84,19 +82,34 @@ int init_graphics() {
   return 0;
 }
 
-static void render_score(int score) {
+static void render_right_text(const char *text, int y, TTF_Font *Font) {
+  SDL_Surface *surface = TTF_RenderText_Solid(Font, text, Gray);
+  SDL_Texture *texture = SDL_CreateTextureFromSurface(rend, surface);
+
+  SDL_Rect rect;
+  rect.x = (GRID_WIDTH + 3) * BLOCK_SIZE - surface->w / 2;
+  rect.y = y;
+  rect.w = surface->w;
+  rect.h = surface->h;
+
+  SDL_RenderCopy(rend, texture, NULL, &rect);
+
+  SDL_FreeSurface(surface);
+  SDL_DestroyTexture(texture);
+};
+
+static void render_score(int score, int level) {
   char score_str[SCORE_SIZE];
   snprintf(score_str, SCORE_SIZE, "%i", score);
 
-  score_surface = TTF_RenderText_Solid(Font_32, score_str, Gray);
-  score_texture = SDL_CreateTextureFromSurface(rend, score_surface);
+  render_right_text("SCORE", BLOCK_SIZE, Font_32);
+  render_right_text(score_str, BLOCK_SIZE * 2, Font_32);
 
-  score_rect.x = (GRID_WIDTH + 3) * BLOCK_SIZE - score_surface->w / 2;
-  score_rect.y = BLOCK_SIZE;
-  score_rect.w = score_surface->w;
-  score_rect.h = score_surface->h;
+  char level_str[3];
+  snprintf(level_str, 3, "%i", level);
 
-  SDL_RenderCopy(rend, score_texture, NULL, &score_rect);
+  render_right_text("LEVEL", BLOCK_SIZE * 6, Font_32);
+  render_right_text(level_str, BLOCK_SIZE * 7, Font_32);
 }
 
 static void render_game_over_text(const char *text, int y, TTF_Font *Font) {
@@ -165,15 +178,12 @@ void clear_screen() {
   SDL_RenderClear(rend);
 }
 
-void render_frame(int score) {
-  render_score(score);
+void render_frame(int score, int level) {
+  render_score(score, level);
   SDL_RenderPresent(rend);
 }
 
 void release_resources() {
-  SDL_FreeSurface(score_surface);
-  SDL_DestroyTexture(score_texture);
-
   SDL_DestroyRenderer(rend);
   SDL_DestroyWindow(win);
 

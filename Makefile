@@ -1,6 +1,6 @@
 CC := gcc
 
-CFLAGS := `sdl2-config --cflags` -ggdb3 -O0 --std=c99 -Wall
+CFLAGS := `sdl2-config --cflags` -O3 --std=c99
 LDFLAGS := `sdl2-config --libs` -lm -lSDL2_ttf
 EXTRA_FLAGS :=
 
@@ -18,7 +18,7 @@ EMSCRIPTEN_ACTIVATE_SCRIPT := ~/emsdk/emsdk_env.sh
 
 EM_BUILD_DIR := dist
 
-EMFLAGS = -sUSE_SDL=2 -sUSE_SDL_TTF=2 -sALLOW_MEMORY_GROWTH -s -ggdb3 -s -O0 -s --std=c99 --preload-file src/assets/font.ttf
+EMFLAGS = -sUSE_SDL=2 -sUSE_SDL_TTF=2 -sALLOW_MEMORY_GROWTH -s -O3 -s --std=c99 --preload-file src/assets/font.ttf
 
 # default recipe
 all: compile_run
@@ -30,7 +30,7 @@ compile: $(OBJS) $(HDRS) Makefile
 	$(CC) -o $(EXEC) $(OBJS) $(LDFLAGS) $(EXTRA_FLAGS)
 
 debug:
-	$(MAKE) EXTRA_FLAGS=-fsanitize=address,undefined
+	$(MAKE) EXTRA_FLAGS='-ggdb3 -O0 -fsanitize=address,undefined'
 
 %.o: %.c $(HDRS) Makefile
 	$(CC) -o $@ -c $< $(CFLAGS) $(EXTRA_FLAGS)

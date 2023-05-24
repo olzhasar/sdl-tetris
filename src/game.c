@@ -1,48 +1,48 @@
 #include "game.h"
-#include "definitions.h"
 #include "graphics.h"
 #include "input.h"
 
 // Grid is represented as m x n int matrix. Values are color codes for occupied
 // cells or 0 for empty cells
-static int grid[GRID_WIDTH][GRID_HEIGHT] = {0};
+static uint32_t grid[GRID_WIDTH][GRID_HEIGHT] = {0};
 // Array of rows that need to be destroyed
-static int to_destroy[GRID_HEIGHT] = {0};
+static uint8_t to_destroy[GRID_HEIGHT] = {0};
 
-static int game_over = 0;
-static int score = 0;
+static uint8_t game_over = 0;
+static uint32_t score = 0;
 
-static int iteration = 0;
-static int lines_cleared = 0;
+static uint8_t iteration = 0;
+static uint8_t lines_cleared = 0;
 
-static int current_level = 0;
-static int fall_freq = 48;
-static const int MAX_LEVEL_FREQ = 15;
-static const int LEVEL_FREQS[15] = {48, 43, 38, 33, 28, 23, 18, 13,
-                                    8,  6,  5,  4,  3,  2,  1};
-static const int SOFT_FREQ = 3;
-static const int HARD_FREQ = 1;
+static uint8_t current_level = 0;
+static uint8_t fall_freq = 48;
+static const uint8_t MAX_LEVEL_FREQ = 15;
+static const uint8_t LEVEL_FREQS[15] = {48, 43, 38, 33, 28, 23, 18, 13,
+                                        8,  6,  5,  4,  3,  2,  1};
+static const uint8_t SOFT_FREQ = 3;
+static const uint8_t HARD_FREQ = 1;
 
-static const int N_COLORS = 13;
-static const int COLORS[13] = {
+static const uint8_t N_COLORS = 13;
+static const uint32_t COLORS[13] = {
     0xFFC82E, 0xFEFB34, 0x53DA3F, 0x01EDFA, 0xDD0AB2, 0xEA141C, 0xFE4819,
     0xFF910C, 0x39892F, 0x0077D3, 0x78256F, 0x2E2E84, 0x485DC5,
 };
 
 // Array of blocks in the current shape
-// Each value pair up to index 8 corresponds to the shift from the shape
+// Each value pair corresponds to the shift from the shape
 // position over x and y axis
-// Last value is the color of the current shape
-static int current_shape[9] = {0};
-static int current_shape_type;
+static int8_t current_shape[8] = {0};
+static uint32_t current_shape_color = 0;
+// Index of the current shape in the SHAPES array
+static uint8_t current_shape_type;
 
 // Current shape coordinates
-static int current_x = 0, current_y = 0;
+static int8_t current_x = 0, current_y = 0;
 
 // Represent shapes as an array of 8 ints.
 // Each int pair represents the shift from the shape position over x and y axis
-static const int N_SHAPES = 7;
-static int SHAPES[7][8] = {
+static const uint8_t N_SHAPES = 7;
+static int8_t SHAPES[7][8] = {
     {0, 0, 1, 0, 0, 1, 1, 1},   // O
     {0, 0, -1, 0, 1, 0, 0, 1},  // T
     {0, 0, 0, -1, 0, 1, 1, 1},  // L
@@ -52,13 +52,13 @@ static int SHAPES[7][8] = {
     {0, 0, -1, 0, 0, 1, 1, 1},  // Z
 };
 
-static const int FRAME_DELAY = 16; // 1000 / 16 ~= 60fps
-static const int RESTART_DELAY = 300;
+static const uint8_t FRAME_DELAY = 16; // 1000 / 16 ~= 60fps
+static const uint16_t RESTART_DELAY = 300;
 
-static const int SCORE_SINGLE = 1;
-static const int SCORE_LINE = 100;
+static const uint8_t SCORE_SINGLE = 1;
+static const uint8_t SCORE_LINE = 100;
 
-static int get_curr_fall_freq() {
+static uint8_t get_curr_fall_freq() {
   if (current_level >= MAX_LEVEL_FREQ) {
     return LEVEL_FREQS[MAX_LEVEL_FREQ - 1];
   }
@@ -68,7 +68,7 @@ static int get_curr_fall_freq() {
 void reset_fall_freq() { fall_freq = get_curr_fall_freq(); }
 
 void update_fall_freq(int new) {
-  int calculated = get_curr_fall_freq();
+  uint8_t calculated = get_curr_fall_freq();
   if (calculated < new) {
     fall_freq = calculated;
   } else {
@@ -83,9 +83,9 @@ void end_game() {
 
 void spawn_shape() {
   current_shape_type = rand() % N_SHAPES;
-  current_shape[8] = COLORS[rand() % N_COLORS];
+  current_shape_color = COLORS[rand() % N_COLORS];
 
-  for (int i = 0; i < 8; i++) {
+  for (int8_t i = 0; i < 8; i++) {
     current_shape[i] = SHAPES[current_shape_type][i];
   }
 
@@ -93,9 +93,9 @@ void spawn_shape() {
 
   // Check for top collisions with existing blocks in the grid
   // If we spot any collision, we'll start with negative current_y
-  int x, y;
+  int8_t x, y;
   for (current_y = -2; current_y < 0; current_y++) {
-    for (int i = 0; i < 4; i++) {
+    for (int8_t i = 0; i < 4; i++) {
       x = current_shape[i * 2] + current_x;
       y = current_shape[i * 2 + 1] + current_y + 1;
 
@@ -107,8 +107,8 @@ void spawn_shape() {
 }
 
 void restart_game() {
-  for (int i = 0; i < GRID_WIDTH; i++) {
-    for (int j = 0; j < GRID_HEIGHT; j++) {
+  for (int8_t i = 0; i < GRID_WIDTH; i++) {
+    for (int8_t j = 0; j < GRID_HEIGHT; j++) {
       grid[i][j] = 0;
     }
   };
@@ -123,8 +123,8 @@ void restart_game() {
 }
 
 void destroy_row(int row) {
-  for (int j = row; j > 0; j--) {
-    for (int i = 0; i < GRID_WIDTH; i++) {
+  for (int8_t j = row; j > 0; j--) {
+    for (int8_t i = 0; i < GRID_WIDTH; i++) {
       grid[i][j] = grid[i][j - 1];
     }
   }
@@ -137,12 +137,12 @@ void destroy_row(int row) {
 void clean_destroyed_blocks() {
   int count = 0;
 
-  for (int j = 0; j < GRID_HEIGHT; j++) {
+  for (int8_t j = 0; j < GRID_HEIGHT; j++) {
     if (to_destroy[j]) {
       count++;
 
       to_destroy[j] = 0;
-      for (int i = 0; i < GRID_WIDTH; i++) {
+      for (int8_t i = 0; i < GRID_WIDTH; i++) {
         grid[i][j] = 0;
       }
       destroy_row(j);
@@ -154,12 +154,12 @@ void clean_destroyed_blocks() {
   }
 }
 
-int row_is_full(int y) {
+int row_is_full(int8_t y) {
   if (y < 0 || to_destroy[y]) { // can be negative at the end of the game
     return 1;
   }
 
-  for (int i = 0; i < GRID_WIDTH; i++) {
+  for (int8_t i = 0; i < GRID_WIDTH; i++) {
     if (grid[i][y] == 0) {
       return 0;
     }
@@ -170,15 +170,14 @@ int row_is_full(int y) {
 }
 
 void lock_shape() {
-  int i;
-  int x, y;
+  int8_t x, y;
 
-  for (i = 0; i < 4; i++) {
+  for (int8_t i = 0; i < 4; i++) {
     x = current_shape[i * 2] + current_x;
     y = current_shape[i * 2 + 1] + current_y;
 
     if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
-      grid[x][y] = current_shape[8];
+      grid[x][y] = current_shape_color;
     }
 
     if (!row_is_full(y)) {
@@ -194,7 +193,7 @@ void lock_shape() {
   spawn_shape();
 }
 
-int detect_collision(int x, int y) {
+int8_t detect_collision(int8_t x, int8_t y) {
   if (x < 0 || x >= GRID_WIDTH) {
     return 1;
   }
@@ -217,11 +216,11 @@ void rotate_shape() {
     return; // O-shape should not be rotated
   }
 
-  int temp[8] = {0};
+  int8_t temp[8] = {0};
 
-  int x, y;
+  int8_t x, y;
 
-  for (int i = 0; i < 4; i++) {
+  for (int8_t i = 0; i < 4; i++) {
     temp[i * 2] = current_shape[i * 2 + 1];
     temp[i * 2 + 1] = -current_shape[i * 2];
 
@@ -233,7 +232,7 @@ void rotate_shape() {
     }
   };
 
-  for (int i = 0; i < 8; i++) {
+  for (int8_t i = 0; i < 8; i++) {
     current_shape[i] = temp[i];
   }
 }
@@ -241,9 +240,9 @@ void rotate_shape() {
 void move_side(int direction) {
   reset_fall_freq();
 
-  int x, y;
+  int8_t x, y;
 
-  for (int i = 0; i < 4; i++) {
+  for (int8_t i = 0; i < 4; i++) {
     x = current_shape[i * 2] + current_x + direction;
     y = current_shape[i * 2 + 1] + current_y;
 
@@ -264,9 +263,9 @@ void fall() {
 
   iteration = 0;
 
-  int x, y;
+  int8_t x, y;
 
-  for (int i = 0; i < 4; i++) {
+  for (int8_t i = 0; i < 4; i++) {
     x = current_shape[i * 2] + current_x;
     y = current_shape[i * 2 + 1] + current_y + 1;
 
@@ -302,33 +301,33 @@ void update_frame() {
 
   clear_screen();
 
-  for (int i = 0; i < GRID_WIDTH; ++i) {
-    for (int j = 0; j < GRID_HEIGHT; ++j) {
+  for (int8_t i = 0; i < GRID_WIDTH; ++i) {
+    for (int8_t j = 0; j < GRID_HEIGHT; ++j) {
       draw_block(i, j, grid[i][j]);
     }
   }
 
-  int x, y;
+  int8_t x, y;
 
-  for (int i = 0; i < 4; i++) {
+  for (int8_t i = 0; i < 4; i++) {
     x = current_shape[i * 2] + current_x;
     y = current_shape[i * 2 + 1] + current_y;
 
     if (y >= 0) { // skip overflowed
-      draw_block(x, y, current_shape[8]);
+      draw_block(x, y, current_shape_color);
     }
   }
 
   render_frame(score, current_level);
 }
 
-int init_game() {
+int8_t init_game() {
   spawn_shape();
 
   return init_graphics();
 }
 
-int game_loop() {
+int8_t game_loop() {
   enum InputEvent event = listen_for_input(game_over);
   if (event == QUIT) {
     return 1;
@@ -350,7 +349,7 @@ int game_loop() {
   return 0;
 }
 
-int terminate_game() {
+int8_t terminate_game() {
   release_resources();
   return 0;
 }

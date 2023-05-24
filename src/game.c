@@ -76,6 +76,36 @@ void update_fall_freq(int new) {
   }
 }
 
+void end_game() {
+  game_over = 1;
+  clear_screen();
+}
+
+void spawn_shape() {
+  current_shape_type = rand() % N_SHAPES;
+  current_shape[8] = COLORS[rand() % N_COLORS];
+
+  for (int i = 0; i < 8; i++) {
+    current_shape[i] = SHAPES[current_shape_type][i];
+  }
+
+  current_x = GRID_WIDTH / 2;
+
+  // Check for top collisions with existing blocks in the grid
+  // If we spot any collision, we'll start with negative current_y
+  int x, y;
+  for (current_y = -2; current_y < 0; current_y++) {
+    for (int i = 0; i < 4; i++) {
+      x = current_shape[i * 2] + current_x;
+      y = current_shape[i * 2 + 1] + current_y + 1;
+
+      if (y >= 0 && grid[x][y] != 0) {
+        return;
+      }
+    }
+  };
+}
+
 void restart_game() {
   for (int i = 0; i < GRID_WIDTH; i++) {
     for (int j = 0; j < GRID_HEIGHT; j++) {
@@ -88,25 +118,8 @@ void restart_game() {
   lines_cleared = 0;
   score = 0;
 
+  spawn_shape();
   SDL_Delay(RESTART_DELAY);
-}
-
-void end_game() {
-  game_over = 1;
-  clear_screen();
-}
-
-void spawn_shape() {
-  current_shape_type = rand() % N_SHAPES;
-
-  for (int i = 0; i < 8; i++) {
-    current_shape[i] = SHAPES[current_shape_type][i];
-  }
-
-  current_shape[8] = COLORS[rand() % N_COLORS];
-
-  current_x = GRID_WIDTH / 2;
-  current_y = 0;
 }
 
 void destroy_row(int row) {
@@ -142,7 +155,7 @@ void clean_destroyed_blocks() {
 }
 
 int row_is_full(int y) {
-  if (y < 0) { // can be negative at the end of the game
+  if (y < 0 || to_destroy[y]) { // can be negative at the end of the game
     return 1;
   }
 
@@ -284,8 +297,7 @@ void handle_input_event(enum InputEvent event) {
 
 void update_frame() {
   if (game_over) {
-    render_game_over_message(score);
-    return;
+    return render_game_over_message(score);
   }
 
   clear_screen();

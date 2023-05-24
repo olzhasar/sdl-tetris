@@ -158,18 +158,14 @@ void draw_block(int x, int y, int color) {
   SDL_SetRenderDrawColor(rend, 0x0c, 0x0c, 0x0c, 0xff);
   SDL_RenderFillRect(rend, &outer);
 
-  if (color == 0) {
-    SDL_SetRenderDrawColor(rend, 0x11, 0x11, 0x11, 0xff);
-  } else {
-    unsigned int r, g, b;
+  unsigned int r, g, b;
 
-    // Shift bits and extract 8 least significant bits for each color;
-    r = (color >> 16) & 0xFF;
-    g = (color >> 8) & 0xFF;
-    b = color & 0xFF;
+  // Shift bits and extract 8 least significant bits for each color;
+  r = (color >> 16) & 0xFF;
+  g = (color >> 8) & 0xFF;
+  b = color & 0xFF;
 
-    SDL_SetRenderDrawColor(rend, r, g, b, 0xff);
-  }
+  SDL_SetRenderDrawColor(rend, r, g, b, 0xff);
   SDL_RenderFillRect(rend, &inner);
 }
 

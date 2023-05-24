@@ -2,9 +2,9 @@
 #include "graphics.h"
 #include "input.h"
 
-// Grid is represented as m x n int matrix. Values are color codes for occupied
-// cells or 0 for empty cells
-static uint32_t grid[GRID_WIDTH][GRID_HEIGHT] = {0};
+// Grid is represented as m x n int matrix. Values are color indices for
+// occupied cells or 0 for empty cells
+static uint8_t grid[GRID_WIDTH][GRID_HEIGHT] = {0};
 // Array of rows that need to be destroyed
 static uint8_t to_destroy[GRID_HEIGHT] = {0};
 
@@ -22,17 +22,19 @@ static const uint8_t LEVEL_FREQS[15] = {48, 43, 38, 33, 28, 23, 18, 13,
 static const uint8_t SOFT_FREQ = 3;
 static const uint8_t HARD_FREQ = 1;
 
-static const uint8_t N_COLORS = 13;
-static const uint32_t COLORS[13] = {
-    0xFFC82E, 0xFEFB34, 0x53DA3F, 0x01EDFA, 0xDD0AB2, 0xEA141C, 0xFE4819,
-    0xFF910C, 0x39892F, 0x0077D3, 0x78256F, 0x2E2E84, 0x485DC5,
+static const uint8_t N_COLORS = 14;
+static const uint32_t COLORS[14] = {
+    0x111111, 0xFFC82E, 0xFEFB34, 0x53DA3F, // first el is an empty cell
+    0x01EDFA, 0xDD0AB2, 0xEA141C, 0xFE4819, 0xFF910C,
+    0x39892F, 0x0077D3, 0x78256F, 0x2E2E84, 0x485DC5,
 };
 
 // Array of blocks in the current shape
 // Each value pair corresponds to the shift from the shape
 // position over x and y axis
 static int8_t current_shape[8] = {0};
-static uint32_t current_shape_color = 0;
+// Index of the color in the COLORS array
+static uint8_t current_shape_color = 0;
 // Index of the current shape in the SHAPES array
 static uint8_t current_shape_type;
 
@@ -87,7 +89,7 @@ void spawn_shape() {
   state_changed = 1;
 
   current_shape_type = rand() % N_SHAPES;
-  current_shape_color = COLORS[rand() % N_COLORS];
+  current_shape_color = rand() % (N_COLORS - 1) + 1;
 
   for (int8_t i = 0; i < 8; i++) {
     current_shape[i] = SHAPES[current_shape_type][i];
@@ -317,7 +319,7 @@ void update_frame() {
 
   for (int8_t i = 0; i < GRID_WIDTH; ++i) {
     for (int8_t j = 0; j < GRID_HEIGHT; ++j) {
-      draw_block(i, j, grid[i][j]);
+      draw_block(i, j, COLORS[grid[i][j]]);
     }
   }
 
@@ -328,7 +330,7 @@ void update_frame() {
     y = current_shape[i * 2 + 1] + current_y;
 
     if (y >= 0) { // skip overflowed
-      draw_block(x, y, current_shape_color);
+      draw_block(x, y, COLORS[current_shape_color]);
     }
   }
 

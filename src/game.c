@@ -191,6 +191,8 @@ void lock_shape() {
     }
   }
 
+  clean_destroyed_blocks();
+
   iteration = 0;
   score += SCORE_SINGLE;
   reset_fall_freq();
@@ -353,7 +355,6 @@ int8_t game_loop() {
   } else {
     handle_input_event(event);
     fall();
-    clean_destroyed_blocks();
     update_frame();
 
     SDL_Delay(FRAME_DELAY);

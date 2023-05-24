@@ -65,6 +65,8 @@ static uint8_t get_curr_fall_freq() {
   return LEVEL_FREQS[current_level];
 };
 
+static uint8_t state_changed = 0;
+
 void reset_fall_freq() { fall_freq = get_curr_fall_freq(); }
 
 void update_fall_freq(int new) {
@@ -82,6 +84,8 @@ void end_game() {
 }
 
 void spawn_shape() {
+  state_changed = 1;
+
   current_shape_type = rand() % N_SHAPES;
   current_shape_color = COLORS[rand() % N_COLORS];
 
@@ -216,6 +220,8 @@ void rotate_shape() {
     return; // O-shape should not be rotated
   }
 
+  state_changed = 1;
+
   int8_t temp[8] = {0};
 
   int8_t x, y;
@@ -252,6 +258,7 @@ void move_side(int direction) {
   }
 
   current_x += direction;
+  state_changed = 1;
 }
 
 void fall() {
@@ -275,6 +282,7 @@ void fall() {
   }
 
   current_y += 1;
+  state_changed = 1;
 }
 
 void handle_input_event(enum InputEvent event) {
@@ -299,6 +307,10 @@ void update_frame() {
     return render_game_over_message(score);
   }
 
+  if (!state_changed) {
+    return; // no need to rerender if all blocks remain at the same positions
+  }
+
   clear_screen();
 
   for (int8_t i = 0; i < GRID_WIDTH; ++i) {
@@ -319,6 +331,7 @@ void update_frame() {
   }
 
   render_frame(score, current_level);
+  state_changed = 0;
 }
 
 int8_t init_game() {

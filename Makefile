@@ -13,7 +13,8 @@ OBJS := $(SRCS:.c=.o)
 EXEC := game
 
 # Emscripten
-EMCC := emcc
+EMCC := EMSDK_PYTHON=/usr/bin/python3 emcc
+EMSCRIPTEN_ACTIVATE_SCRIPT := ~/emsdk/emsdk_env.sh
 
 EM_BUILD_DIR := dist
 
@@ -42,6 +43,7 @@ wasm_build_dir:
 	mkdir -p $(EM_BUILD_DIR)
 
 wasm: wasm_build_dir
+	source $(EMSCRIPTEN_ACTIVATE_SCRIPT)
 	cp index.html $(EM_BUILD_DIR)
 	$(EMCC) $(SRCS) $(EMFLAGS) -o $(EM_BUILD_DIR)/index.js
 

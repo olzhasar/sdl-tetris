@@ -178,6 +178,8 @@ int row_is_full(int8_t y) {
 void lock_shape() {
   int8_t x, y;
 
+  uint8_t to_destroy = 0;
+
   for (int8_t i = 0; i < 4; i++) {
     x = current_shape[i * 2] + current_x;
     y = current_shape[i * 2 + 1] + current_y;
@@ -186,14 +188,18 @@ void lock_shape() {
       grid[x][y] = current_shape_color;
     }
 
-    if (!row_is_full(y)) {
+    if (row_is_full(y)) {
+      to_destroy++;
+    } else {
       if (y <= 0) {
         end_game();
       }
     }
   }
 
-  clean_destroyed_blocks();
+  if (to_destroy) {
+    clean_destroyed_blocks();
+  }
 
   iteration = 0;
   score += SCORE_SINGLE;

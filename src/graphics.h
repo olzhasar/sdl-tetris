@@ -1,8 +1,8 @@
-#include "definitions.h"
+#pragma once
+#include "game.h"
 
 int init_graphics();
-void clear_screen();
-void render_game_over_message(int score);
-void render_frame(int score, int level);
+void render_state(game_state_t *state);
 void release_resources();
-void draw_block(int x, int y, int color);
+void log_error(const char *msg);
+void delay();

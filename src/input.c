@@ -1,5 +1,6 @@
 #include "input.h"
-#include "definitions.h"
+#include "game.h"
+#include <SDL_events.h>
 #include <SDL_keycode.h>
 
 static int handle_key_down(SDL_Keycode key_code) {
@@ -20,11 +21,13 @@ static int handle_key_down(SDL_Keycode key_code) {
     return SOFT_DROP;
   case SDLK_SPACE:
     return HARD_DROP;
+  case SDLK_RETURN:
+    return START;
   }
   return ANY_INPUT;
 }
 
-int listen_for_input(int game_over) {
+int listen_for_input() {
   SDL_Event event;
 
   while (SDL_PollEvent(&event)) {

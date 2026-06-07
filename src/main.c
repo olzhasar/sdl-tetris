@@ -1,38 +1,51 @@
-#include "definitions.h"
 #include "game.h"
+#include "graphics.h"
+#include "input.h"
+#include <stdlib.h>
+#include <time.h>
 
-#ifdef __EMSCRIPTEN__
-void run_loop() { game_loop(); }
-#endif
+int game_loop(game_state_t *state) {
+  input_event_t event = listen_for_input();
+  if (event == QUIT) {
+    return 1;
+  }
+
+  game_state_update(state, event);
+  render_state(state);
+
+  delay();
+
+  return 0;
+}
+//
+// #ifdef __EMSCRIPTEN__
+// void run_loop() { game_loop(); }
+// #endif
 
 int main(int argc, char **argv) {
-#ifndef __EMSCRIPTEN__
+  // #ifndef __EMSCRIPTEN__
   srand(time(NULL)); // seed the random number generator
-#endif
+                     // #endif
 
-  if (init_game() != 0) {
-    SDL_LogError(0, "Failed to start game\n");
-    return 1;
-  };
+  // #ifdef __EMSCRIPTEN__
+  //   emscripten_set_main_loop(run_loop, 0, 1);
+  // #else
+  init_graphics();
+  game_state_t state = game_state_new();
 
-#ifdef __EMSCRIPTEN__
-  emscripten_set_main_loop(run_loop, 0, 1);
-#else
   while (1) {
-    int res = game_loop();
+    int res = game_loop(&state);
 
     if (res != 0) {
       if (res < 0) {
-        SDL_LogError(0, "Unexpected error occured\n");
+        log_error("Unexpected error occured\n");
       }
       break;
     }
   }
-#endif
+  // #endif
 
-  if (terminate_game() != 0) {
-    SDL_LogError(0, "Error while terminating game\n");
-  };
+  release_resources();
 
   return 0;
 }

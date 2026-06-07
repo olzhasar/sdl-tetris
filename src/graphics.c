@@ -1,4 +1,8 @@
 #include "graphics.h"
+#include "SDL.h"
+#include "SDL_log.h"
+#include "SDL_timer.h"
+#include "SDL_ttf.h"
 
 #define WIN_TITLE "Tetris"
 
@@ -8,17 +12,26 @@
 #define FONT_PATH "src/assets/font.ttf"
 #endif
 
-#define SCORE_SIZE 7
-#define LEVEL_SIZE 3
+static const int BLOCK_SIZE = 40;
+static const int SCORE_SIZE = 7;
+static const int LEVEL_SIZE = 3;
 
-const int WIN_WIDTH = (GRID_WIDTH + 5) * BLOCK_SIZE;
-const int WIN_HEIGHT = (GRID_HEIGHT + 2) * BLOCK_SIZE;
+static const int COLORS[N_COLORS] = {
+    0x111111, 0xFFC82E, 0xFEFB34, 0x53DA3F, // first el is an empty cell
+    0x01EDFA, 0xDD0AB2, 0xEA141C, 0xFE4819, 0xFF910C,
+    0x39892F, 0x0077D3, 0x78256F, 0x2E2E84, 0x485DC5,
+};
+
+static const int FRAME_DELAY = 16; // 1000 / 16 ~= 60fps
+
+static const int WIN_WIDTH = (GRID_WIDTH + 5) * BLOCK_SIZE;
+static const int WIN_HEIGHT = (GRID_HEIGHT + 2) * BLOCK_SIZE;
 
 static SDL_Window *win;
 static SDL_Renderer *rend;
 
-static SDL_Color White = {0xff, 0xff, 0xff};
-static SDL_Color Gray = {0xcc, 0xcc, 0xcc};
+static const SDL_Color White = {0xff, 0xff, 0xff};
+static const SDL_Color Gray = {0xcc, 0xcc, 0xcc};
 static TTF_Font *Font_18;
 static TTF_Font *Font_32;
 
@@ -82,7 +95,7 @@ int init_graphics() {
   return 0;
 }
 
-static void render_right_text(const char *text, int y, TTF_Font *Font) {
+static void render_side_text(const char *text, int y, TTF_Font *Font) {
   SDL_Surface *surface = TTF_RenderText_Solid(Font, text, Gray);
   SDL_Texture *texture = SDL_CreateTextureFromSurface(rend, surface);
 
@@ -102,14 +115,14 @@ static void render_score(int score, int level) {
   char score_str[SCORE_SIZE];
   snprintf(score_str, SCORE_SIZE, "%0*d", SCORE_SIZE - 1, score);
 
-  render_right_text("SCORE", BLOCK_SIZE, Font_18);
-  render_right_text(score_str, BLOCK_SIZE * 2, Font_32);
+  render_side_text("SCORE", BLOCK_SIZE, Font_18);
+  render_side_text(score_str, BLOCK_SIZE * 2, Font_32);
 
   char level_str[3];
   snprintf(level_str, 3, "%0*d", LEVEL_SIZE - 1, level);
 
-  render_right_text("LEVEL", BLOCK_SIZE * 6, Font_18);
-  render_right_text(level_str, BLOCK_SIZE * 7, Font_32);
+  render_side_text("LEVEL", BLOCK_SIZE * 6, Font_18);
+  render_side_text(level_str, BLOCK_SIZE * 7, Font_32);
 }
 
 static void render_game_over_text(const char *text, int y, TTF_Font *Font) {
@@ -129,6 +142,8 @@ static void render_game_over_text(const char *text, int y, TTF_Font *Font) {
 }
 
 void render_game_over_message(int score) {
+  SDL_LogDebug(0, "Render game over text");
+
   char score_str[SCORE_SIZE];
   snprintf(score_str, SCORE_SIZE, "%i", score);
 
@@ -136,7 +151,7 @@ void render_game_over_message(int score) {
   render_game_over_text("YOU SCORED:", WIN_HEIGHT / 2 - BLOCK_SIZE * 2,
                         Font_32);
   render_game_over_text(score_str, WIN_HEIGHT / 2, Font_32);
-  render_game_over_text("Press any key to restart...",
+  render_game_over_text("Press ENTER to restart...",
                         WIN_HEIGHT / 2 + BLOCK_SIZE * 2, Font_18);
   SDL_RenderPresent(rend);
 }
@@ -174,10 +189,44 @@ void clear_screen() {
   SDL_RenderClear(rend);
 }
 
-void render_frame(int score, int level) {
-  render_score(score, level);
+void render_state(game_state_t *state) {
+  if (!state->changed) {
+    return; // no need to rerender if all blocks remain at the same positions
+  }
+
+  SDL_LogDebug(0, "Rendering state");
+
+  clear_screen();
+
+  for (int i = 0; i < GRID_WIDTH; ++i) {
+    for (int j = 0; j < GRID_HEIGHT; ++j) {
+      draw_block(i, j, COLORS[state->grid[i][j]]);
+    }
+  }
+
+  int x, y;
+
+  for (int i = 0; i < 4; i++) {
+    x = state->current_shape[i * 2] + state->current_x;
+    y = state->current_shape[i * 2 + 1] + state->current_y;
+
+    if (y >= 0) { // skip overflowed
+      draw_block(x, y, COLORS[state->current_shape_color]);
+    }
+  }
+
+  render_score(state->score, state->level);
+
+  if (state->game_over) {
+    return render_game_over_message(state->score);
+  }
+
   SDL_RenderPresent(rend);
-}
+};
+
+void delay() { SDL_Delay(FRAME_DELAY); }
+
+void log_error(const char *msg) { SDL_LogError(0, "%s", msg); }
 
 void release_resources() {
   SDL_DestroyRenderer(rend);

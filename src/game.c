@@ -7,7 +7,7 @@ static int to_destroy[GRID_HEIGHT] = {0};
 
 static unsigned int lines_cleared = 0;
 
-static const int MAX_LEVEL_FREQ = 15;
+static const int MAX_LEVEL_PERIOD = 15;
 static const int LEVEL_PERIODS[15] = {48, 43, 38, 33, 28, 23, 18, 13,
                                       8,  6,  5,  4,  3,  2,  1};
 
@@ -16,6 +16,9 @@ static unsigned int fall_period = LEVEL_PERIODS[0];
 
 static const int SOFT_FALL_PERIOD = 3;
 static const int HARD_FALL_PERIOD = 1;
+
+static int shape_bag[N_SHAPES];
+static int shape_bag_idx = N_SHAPES - 1;
 
 // Represent shapes as arrays of 8 ints.
 // Each int pair represents the shift from the shape position over x and y axis
@@ -32,19 +35,19 @@ static int SHAPES[N_SHAPES][8] = {
 static const int SCORE_EARN_SINGLE = 1;
 static const int SCORE_EARN_LINE = 100;
 
-static int get_curr_fall_freq(game_state_t *state) {
-  if (state->level >= MAX_LEVEL_FREQ) {
-    return LEVEL_PERIODS[MAX_LEVEL_FREQ - 1];
+static int get_curr_fall_period(game_state_t *state) {
+  if (state->level >= MAX_LEVEL_PERIOD) {
+    return LEVEL_PERIODS[MAX_LEVEL_PERIOD - 1];
   }
   return LEVEL_PERIODS[state->level];
 };
 
-void reset_fall_freq(game_state_t *state) {
-  fall_period = get_curr_fall_freq(state);
+void reset_fall_period(game_state_t *state) {
+  fall_period = get_curr_fall_period(state);
 }
 
-void update_fall_freq(game_state_t *state, int new) {
-  int calculated = get_curr_fall_freq(state);
+void update_fall_period(game_state_t *state, int new) {
+  int calculated = get_curr_fall_period(state);
   if (calculated < new) {
     fall_period = calculated;
   } else {
@@ -52,10 +55,30 @@ void update_fall_freq(game_state_t *state, int new) {
   }
 }
 
+int get_next_shape_kind() {
+  shape_bag_idx = (shape_bag_idx + 1) % N_SHAPES;
+
+  if (shape_bag_idx == 0) {
+    for (int i = 0; i < N_SHAPES; i++) {
+      shape_bag[i] = i;
+    }
+
+    // Fisher Yates shuffle
+    for (int i = N_SHAPES - 1; i > 0; i--) {
+      int j = rand() % (i + 1);
+      int temp = shape_bag[i];
+      shape_bag[i] = shape_bag[j];
+      shape_bag[j] = temp;
+    }
+  }
+
+  return shape_bag[shape_bag_idx];
+}
+
 void spawn_shape(game_state_t *state) {
   state->changed = 1;
 
-  state->current_shape_kind = rand() % N_SHAPES;
+  state->current_shape_kind = get_next_shape_kind();
 
   for (int i = 0; i < 8; i++) {
     state->current_shape[i] = SHAPES[state->current_shape_kind][i];
@@ -169,7 +192,7 @@ void lock_shape(game_state_t *state) {
 
   fall_tick = 0;
   state->score += SCORE_EARN_SINGLE;
-  reset_fall_freq(state);
+  reset_fall_period(state);
 
   if (!state->game_over) {
     spawn_shape(state);
@@ -189,7 +212,7 @@ int detect_collision(game_state_t *state, int x, int y) {
 }
 
 void rotate_shape(game_state_t *state) {
-  reset_fall_freq(state);
+  reset_fall_period(state);
 
   if (state->current_shape_kind == 0) {
     return; // O-shape should not be rotated
@@ -219,7 +242,7 @@ void rotate_shape(game_state_t *state) {
 }
 
 void move_side(game_state_t *state, int direction) {
-  reset_fall_freq(state);
+  reset_fall_period(state);
 
   int x, y;
 
@@ -266,9 +289,9 @@ void handle_input_event(game_state_t *state, input_event_t event) {
   case ROTATE:
     return rotate_shape(state);
   case HARD_DROP:
-    return update_fall_freq(state, HARD_FALL_PERIOD);
+    return update_fall_period(state, HARD_FALL_PERIOD);
   case SOFT_DROP:
-    return update_fall_freq(state, SOFT_FALL_PERIOD);
+    return update_fall_period(state, SOFT_FALL_PERIOD);
   default:
     return;
   }

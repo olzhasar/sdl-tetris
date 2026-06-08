@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int rows_to_destroy = 0;  // a bitmask
+static int rows_to_destroy = 0; // a bitmask
 
 static unsigned int lines_cleared = 0;
 
@@ -112,9 +112,13 @@ void restart_game(game_state_t *state) {
 }
 
 void destroy_row(game_state_t *state, int row) {
-  for (int j = row; j > 0; j--) {
+  for (int j = row; j >= 0; j--) {
     for (int i = 0; i < GRID_WIDTH; i++) {
-      state->grid[i][j] = state->grid[i][j - 1];
+      if (j > 0) {
+        state->grid[i][j] = state->grid[i][j - 1];
+      } else {
+        state->grid[i][j] = 0;
+      }
     }
   }
   lines_cleared++;

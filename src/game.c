@@ -11,7 +11,6 @@ static const unsigned int LEVEL_PERIODS[15] = {
     800, 700, 620, 540, 460, 380, 300, 220, 150, 110, 85, 65, 50, 35, 20};
 
 static const int SOFT_FALL_PERIOD = 30;
-static const int HARD_FALL_PERIOD = 5;
 
 static int shape_bag[N_SHAPES];
 static int shape_bag_idx = N_SHAPES - 1;
@@ -44,11 +43,7 @@ void reset_fall_period(game_state_t *state) {
 
 void update_fall_period(game_state_t *state, int new) {
   int calculated = get_curr_fall_period(state);
-  if (calculated < new) {
-    state->fall_period_ms = calculated;
-  } else {
-    state->fall_period_ms = new;
-  }
+  state->fall_period_ms = calculated < new ? calculated : new;
 }
 
 int get_next_shape_kind() {
@@ -259,25 +254,28 @@ void move_side(game_state_t *state, int direction) {
   state->changed = 1;
 }
 
-void fall(game_state_t *state, unsigned int elapsed_ms) {
+void fall(game_state_t *state, unsigned int elapsed_ms, int hard_drop) {
   state->fall_elapsed_ms += elapsed_ms;
-  if (state->fall_elapsed_ms < state->fall_period_ms) {
+  if (state->fall_elapsed_ms < state->fall_period_ms && !hard_drop) {
     return;
   }
   state->fall_elapsed_ms = 0;
 
   int x, y;
 
-  for (int i = 0; i < 4; i++) {
-    x = state->current_shape[i * 2] + state->current_x;
-    y = state->current_shape[i * 2 + 1] + state->current_y + 1;
+  do {
+    for (int i = 0; i < 4; i++) {
+      x = state->current_shape[i * 2] + state->current_x;
+      y = state->current_shape[i * 2 + 1] + state->current_y + 1;
 
-    if (detect_collision(state, x, y)) {
-      return lock_shape(state);
+      if (detect_collision(state, x, y)) {
+        return lock_shape(state);
+      }
     }
-  }
+    state->current_y += 1;
 
-  state->current_y += 1;
+  } while (hard_drop);
+
   state->changed = 1;
 }
 
@@ -289,10 +287,10 @@ void handle_input_event(game_state_t *state, input_event_t event) {
     return move_side(state, 1);
   case ROTATE:
     return rotate_shape(state);
-  case HARD_DROP:
-    return update_fall_period(state, HARD_FALL_PERIOD);
   case SOFT_DROP:
     return update_fall_period(state, SOFT_FALL_PERIOD);
+  case HARD_DROP:
+    return fall(state, 0, 1);
   default:
     return;
   }
@@ -323,6 +321,6 @@ void game_state_update(game_state_t *state, input_event_t event,
     }
   } else {
     handle_input_event(state, event);
-    fall(state, elapsed_ms);
+    fall(state, elapsed_ms, 0);
   }
 }

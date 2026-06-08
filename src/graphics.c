@@ -16,10 +16,21 @@ static const int BLOCK_SIZE = 40;
 static const int SCORE_SIZE = 7;
 static const int LEVEL_SIZE = 3;
 
-static const int COLORS[N_COLORS] = {
-    0x111111, 0xFFC82E, 0xFEFB34, 0x53DA3F, // first el is an empty cell
-    0x01EDFA, 0xDD0AB2, 0xEA141C, 0xFE4819, 0xFF910C,
-    0x39892F, 0x0077D3, 0x78256F, 0x2E2E84, 0x485DC5,
+static const int COLORS[N_SHAPES + 1] = {
+  0x111111,  // Empty
+  0xFFC82E,  // Yellow
+  // 0xFEFB34,  // Bright Yellow
+  // 0x53DA3F,  // Green
+  0x01EDFA,  // Cyan
+  // 0xDD0AB2,  // Magenta
+  0xEA141C,  // Red
+  // 0xFE4819,  // Red-Orange
+  0xFF910C,  // Orange
+  0x39892F,  // Dark Green
+  0x0077D3,  // Blue
+  0x78256F,  // Purple
+  // 0x2E2E84,  // Dark Blue
+  // 0x485DC5,  // Light Blue
 };
 
 static const int FRAME_DELAY = 16; // 1000 / 16 ~= 60fps
@@ -211,7 +222,7 @@ void render_state(game_state_t *state) {
     y = state->current_shape[i * 2 + 1] + state->current_y;
 
     if (y >= 0) { // skip overflowed
-      draw_block(x, y, COLORS[state->current_shape_color]);
+      draw_block(x, y, COLORS[state->current_shape_kind + 1]);
     }
   }
 

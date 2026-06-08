@@ -1,7 +1,7 @@
 #pragma once
 #define GRID_WIDTH 10
 #define GRID_HEIGHT 20
-#define N_COLORS 14
+#define N_SHAPES 7
 
 typedef enum {
   QUIT = -1,
@@ -27,7 +27,7 @@ typedef struct {
   // position over x and y axis
   int current_shape[8];
   // Index of the color in the COLORS array
-  int current_shape_color;
+  int current_shape_kind;
   // Current shape coordinates
   int current_x;
   int current_y;

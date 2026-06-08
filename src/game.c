@@ -15,13 +15,9 @@ static const int LEVEL_PERIODS[15] = {48, 43, 38, 33, 28, 23, 18, 13,
 static const int SOFT_FALL_PERIOD = 3;
 static const int HARD_FALL_PERIOD = 1;
 
-// Index of the current shape in the SHAPES array
-static int current_shape_type;
-
-// Represent shapes as an array of 8 ints.
+// Represent shapes as arrays of 8 ints.
 // Each int pair represents the shift from the shape position over x and y axis
-static const int N_SHAPES = 7;
-static int SHAPES[7][8] = {
+static int SHAPES[N_SHAPES][8] = {
     {0, 0, 1, 0, 0, 1, 1, 1},   // O
     {0, 0, -1, 0, 1, 0, 0, 1},  // T
     {0, 0, 0, -1, 0, 1, 1, 1},  // L
@@ -57,11 +53,10 @@ void update_fall_freq(game_state_t *state, int new) {
 void spawn_shape(game_state_t *state) {
   state->changed = 1;
 
-  current_shape_type = rand() % N_SHAPES;
-  state->current_shape_color = rand() % (N_COLORS - 1) + 1;
+  state->current_shape_kind = rand() % N_SHAPES;
 
   for (int i = 0; i < 8; i++) {
-    state->current_shape[i] = SHAPES[current_shape_type][i];
+    state->current_shape[i] = SHAPES[state->current_shape_kind][i];
   }
 
   state->current_x = GRID_WIDTH / 2;
@@ -130,7 +125,11 @@ void clean_destroyed_blocks(game_state_t *state) {
 }
 
 int row_is_full(game_state_t *state, int y) {
-  if (y < 0 || to_destroy[y]) { // can be negative at the end of the game
+  if (y < 0) {
+    return 0;
+  }
+
+  if (to_destroy[y]) {
     return 1;
   }
 
@@ -154,7 +153,7 @@ void lock_shape(game_state_t *state) {
     y = state->current_shape[i * 2 + 1] + state->current_y;
 
     if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
-      state->grid[x][y] = state->current_shape_color;
+      state->grid[x][y] = state->current_shape_kind + 1;
     }
 
     if (row_is_full(state, y)) {
@@ -195,7 +194,7 @@ int detect_collision(game_state_t *state, int x, int y) {
 void rotate_shape(game_state_t *state) {
   reset_fall_freq(state);
 
-  if (current_shape_type == 0) {
+  if (state->current_shape_kind == 0) {
     return; // O-shape should not be rotated
   }
 
@@ -284,7 +283,7 @@ game_state_t game_state_new() {
       .level = 0,
       .grid = {0},
       .current_shape = {0},
-      .current_shape_color = 0,
+      .current_shape_kind = 0,
   };
 
   spawn_shape(&state);

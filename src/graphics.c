@@ -33,8 +33,6 @@ static const int COLORS[N_SHAPES + 1] = {
               // 0x485DC5,  // Light Blue
 };
 
-static const int FRAME_DELAY = 16; // 1000 / 16 ~= 60fps
-
 static const int WIN_WIDTH = (GRID_WIDTH + 5) * BLOCK_SIZE;
 static const int WIN_HEIGHT = (GRID_HEIGHT + 2) * BLOCK_SIZE;
 static const int CANVAS_WIDTH = (GRID_WIDTH + 2) * BLOCK_SIZE;
@@ -42,12 +40,12 @@ static const int CANVAS_WIDTH = (GRID_WIDTH + 2) * BLOCK_SIZE;
 static SDL_Window *win;
 static SDL_Renderer *rend;
 
-static const SDL_Color White = {0xff, 0xff, 0xff};
-static const SDL_Color Gray = {0xcc, 0xcc, 0xcc};
+static const SDL_Color White = {0xff, 0xff, 0xff, 0xff};
+static const SDL_Color Gray = {0xcc, 0xcc, 0xcc, 0xff};
 static TTF_Font *Font_18;
 static TTF_Font *Font_32;
 
-static int init_fonts() {
+static int init_fonts(void) {
   if (TTF_Init() != 0) {
     SDL_LogError(0, "error initializing TTF: %s\\n", TTF_GetError());
     return -1;
@@ -73,7 +71,7 @@ static int init_fonts() {
   return 0;
 }
 
-int init_graphics() {
+int init_graphics(void) {
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     SDL_LogError(0, "error initializing SDL: %s\\n", SDL_GetError());
     return -1;
@@ -234,11 +232,7 @@ void render_state(game_state_t *state) {
   SDL_RenderPresent(rend);
 };
 
-void delay() { SDL_Delay(FRAME_DELAY); }
-
-void log_error(const char *msg) { SDL_LogError(0, "%s", msg); }
-
-void release_resources() {
+void teardown_graphics(void) {
   SDL_DestroyRenderer(rend);
   SDL_DestroyWindow(win);
 

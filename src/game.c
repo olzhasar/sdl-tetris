@@ -7,14 +7,11 @@ static int rows_to_destroy = 0; // a bitmask
 static unsigned int lines_cleared = 0;
 
 static const int MAX_LEVEL_PERIOD = 15;
-static const int LEVEL_PERIODS[15] = {48, 43, 38, 33, 28, 23, 18, 13,
-                                      8,  6,  5,  4,  3,  2,  1};
+static const unsigned int LEVEL_PERIODS[15] = {
+    800, 700, 620, 540, 460, 380, 300, 220, 150, 110, 85, 65, 50, 35, 20};
 
-static unsigned int fall_tick = 0;
-static unsigned int fall_period = LEVEL_PERIODS[0];
-
-static const int SOFT_FALL_PERIOD = 3;
-static const int HARD_FALL_PERIOD = 1;
+static const int SOFT_FALL_PERIOD = 30;
+static const int HARD_FALL_PERIOD = 5;
 
 static int shape_bag[N_SHAPES];
 static int shape_bag_idx = N_SHAPES - 1;
@@ -42,15 +39,15 @@ static int get_curr_fall_period(game_state_t *state) {
 };
 
 void reset_fall_period(game_state_t *state) {
-  fall_period = get_curr_fall_period(state);
+  state->fall_period_ms = get_curr_fall_period(state);
 }
 
 void update_fall_period(game_state_t *state, int new) {
   int calculated = get_curr_fall_period(state);
   if (calculated < new) {
-    fall_period = calculated;
+    state->fall_period_ms = calculated;
   } else {
-    fall_period = new;
+    state->fall_period_ms = new;
   }
 }
 
@@ -105,8 +102,8 @@ void restart_game(game_state_t *state) {
   state->changed = 1;
 
   lines_cleared = 0;
-  fall_tick = 0;
-  fall_period = LEVEL_PERIODS[0];
+  state->fall_elapsed_ms = 0;
+  state->fall_period_ms = LEVEL_PERIODS[0];
 
   spawn_shape(state);
 }
@@ -193,7 +190,7 @@ void lock_shape(game_state_t *state) {
     clean_destroyed_blocks(state);
   }
 
-  fall_tick = 0;
+  state->fall_elapsed_ms = 0;
   state->score += SCORE_EARN_SINGLE;
   reset_fall_period(state);
 
@@ -262,11 +259,12 @@ void move_side(game_state_t *state, int direction) {
   state->changed = 1;
 }
 
-void fall(game_state_t *state) {
-  fall_tick = (fall_tick + 1) % fall_period;
-  if (fall_tick != 0) {
+void fall(game_state_t *state, unsigned int elapsed_ms) {
+  state->fall_elapsed_ms += elapsed_ms;
+  if (state->fall_elapsed_ms < state->fall_period_ms) {
     return;
   }
+  state->fall_elapsed_ms = 0;
 
   int x, y;
 
@@ -307,13 +305,17 @@ game_state_t game_state_new() {
       .grid = {0},
       .current_shape = {0},
       .current_shape_kind = 0,
+      .fall_elapsed_ms = 0,
+      .fall_period_ms = LEVEL_PERIODS[0],
   };
 
   spawn_shape(&state);
+
   return state;
 }
 
-void game_state_update(game_state_t *state, input_event_t event) {
+void game_state_update(game_state_t *state, input_event_t event,
+                       unsigned int elapsed_ms) {
   state->changed = 0;
   if (state->game_over) {
     if (event == START) {
@@ -321,6 +323,6 @@ void game_state_update(game_state_t *state, input_event_t event) {
     }
   } else {
     handle_input_event(state, event);
-    fall(state);
+    fall(state, elapsed_ms);
   }
 }

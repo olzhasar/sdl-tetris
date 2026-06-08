@@ -6,7 +6,7 @@
 
 #define WIN_TITLE "Tetris"
 
-#ifdef __ENSCRIPTEN__
+#ifdef __EMSCRIPTEN__
 #define FONT_PATH "font.ttf"
 #else
 #define FONT_PATH "src/assets/font.ttf"
@@ -17,26 +17,27 @@ static const int SCORE_SIZE = 7;
 static const int LEVEL_SIZE = 3;
 
 static const int COLORS[N_SHAPES + 1] = {
-  0x111111,  // Empty
-  0xFFC82E,  // Yellow
-  // 0xFEFB34,  // Bright Yellow
-  // 0x53DA3F,  // Green
-  0x01EDFA,  // Cyan
-  // 0xDD0AB2,  // Magenta
-  0xEA141C,  // Red
-  // 0xFE4819,  // Red-Orange
-  0xFF910C,  // Orange
-  0x39892F,  // Dark Green
-  0x0077D3,  // Blue
-  0x78256F,  // Purple
-  // 0x2E2E84,  // Dark Blue
-  // 0x485DC5,  // Light Blue
+    0x111111, // Empty
+    0xFFC82E, // Yellow
+    // 0xFEFB34,  // Bright Yellow
+    // 0x53DA3F,  // Green
+    0x01EDFA, // Cyan
+    // 0xDD0AB2,  // Magenta
+    0xEA141C, // Red
+    // 0xFE4819,  // Red-Orange
+    0xFF910C, // Orange
+    0x39892F, // Dark Green
+    0x0077D3, // Blue
+    0x78256F, // Purple
+              // 0x2E2E84,  // Dark Blue
+              // 0x485DC5,  // Light Blue
 };
 
 static const int FRAME_DELAY = 16; // 1000 / 16 ~= 60fps
 
 static const int WIN_WIDTH = (GRID_WIDTH + 5) * BLOCK_SIZE;
 static const int WIN_HEIGHT = (GRID_HEIGHT + 2) * BLOCK_SIZE;
+static const int CANVAS_WIDTH = (GRID_WIDTH + 2) * BLOCK_SIZE;
 
 static SDL_Window *win;
 static SDL_Renderer *rend;
@@ -95,9 +96,8 @@ int init_graphics() {
     return -1;
   }
 
-  SDL_CreateRGBSurface(0, WIN_WIDTH, WIN_HEIGHT, 32, 0, 0, 0, 0);
-
   if (init_fonts() != 0) {
+    SDL_DestroyRenderer(rend);
     SDL_DestroyWindow(win);
     SDL_Quit();
     return -1;
@@ -141,7 +141,7 @@ static void render_game_over_text(const char *text, int y, TTF_Font *Font) {
   SDL_Texture *texture = SDL_CreateTextureFromSurface(rend, surface);
 
   SDL_Rect rect;
-  rect.x = (WIN_WIDTH - surface->w) / 2;
+  rect.x = (CANVAS_WIDTH - surface->w) / 2;
   rect.y = y;
   rect.w = surface->w;
   rect.h = surface->h;
@@ -164,7 +164,6 @@ void render_game_over_message(int score) {
   render_game_over_text(score_str, WIN_HEIGHT / 2, Font_32);
   render_game_over_text("Press ENTER to restart...",
                         WIN_HEIGHT / 2 + BLOCK_SIZE * 2, Font_18);
-  SDL_RenderPresent(rend);
 }
 
 void draw_block(int x, int y, int color) {
@@ -229,7 +228,7 @@ void render_state(game_state_t *state) {
   render_score(state->score, state->level);
 
   if (state->game_over) {
-    return render_game_over_message(state->score);
+    render_game_over_message(state->score);
   }
 
   SDL_RenderPresent(rend);

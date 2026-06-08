@@ -2,8 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Array of rows that need to be destroyed
-static int to_destroy[GRID_HEIGHT] = {0};
+static int rows_to_destroy = 0;  // a bitmask
 
 static unsigned int lines_cleared = 0;
 
@@ -128,10 +127,10 @@ void clean_destroyed_blocks(game_state_t *state) {
   int count = 0;
 
   for (int j = 0; j < GRID_HEIGHT; j++) {
-    if (to_destroy[j]) {
+    if (rows_to_destroy & (1 << j)) {
       count++;
 
-      to_destroy[j] = 0;
+      rows_to_destroy ^= (1 << j);
       for (int i = 0; i < GRID_WIDTH; i++) {
         state->grid[i][j] = 0;
       }
@@ -149,7 +148,7 @@ int row_is_full(game_state_t *state, int y) {
     return 0;
   }
 
-  if (to_destroy[y]) {
+  if (rows_to_destroy & (1 << y)) {
     return 1;
   }
 
@@ -159,7 +158,7 @@ int row_is_full(game_state_t *state, int y) {
     }
   }
 
-  to_destroy[y] = 1;
+  rows_to_destroy |= (1 << y);
   return 1;
 }
 

@@ -1,17 +1,19 @@
 #include "game.h"
 #include <stdlib.h>
+#include <string.h>
 
 // Array of rows that need to be destroyed
 static int to_destroy[GRID_HEIGHT] = {0};
-
-static unsigned int fall_tick = 0;
-static unsigned int fall_period = 48;
 
 static unsigned int lines_cleared = 0;
 
 static const int MAX_LEVEL_FREQ = 15;
 static const int LEVEL_PERIODS[15] = {48, 43, 38, 33, 28, 23, 18, 13,
                                       8,  6,  5,  4,  3,  2,  1};
+
+static unsigned int fall_tick = 0;
+static unsigned int fall_period = LEVEL_PERIODS[0];
+
 static const int SOFT_FALL_PERIOD = 3;
 static const int HARD_FALL_PERIOD = 1;
 
@@ -77,17 +79,12 @@ void spawn_shape(game_state_t *state) {
 }
 
 void restart_game(game_state_t *state) {
-  for (int i = 0; i < GRID_WIDTH; i++) {
-    for (int j = 0; j < GRID_HEIGHT; j++) {
-      state->grid[i][j] = 0;
-    }
-  };
-
-  state->game_over = 0;
-  state->level = 0;
-  lines_cleared = 0;
-  state->score = 0;
+  memset(state, 0, sizeof(*state));
   state->changed = 1;
+
+  lines_cleared = 0;
+  fall_tick = 0;
+  fall_period = LEVEL_PERIODS[0];
 
   spawn_shape(state);
 }

@@ -44,10 +44,13 @@
       }
       div.navbar {
         text-align: center;
-        padding-bottom: 24px;
+        padding-bottom: 12px;
       }
       div.navbar.h1 {
         font-size: 24px;
+      }
+      div.footer {
+	text-align: center;
       }
       /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
       canvas.emscripten {
@@ -58,18 +61,8 @@
   </head>
   <body>
     <div class="navbar">
-      <h1>Tetris</h1>
-      <p>
-        The game implented in plain C with SDL2 library and ported to
-        WebAssembly
-      </p>
-      <p>
-        Check out the source code
-        <a href="https://github.com/olzhasar/sdl-tetris">HERE</a>
-      </p>
-      <br />
       <p>You NEED a keyboard to play</p>
-      <p>Controls: Arrow keys or WASD for movements, SPACE for fast drop</p>
+      CONTROLS: ← →↑↓ or WASD, SPACE - fast drop</p>
     </div>
 
     <div class="spinner" id="spinner"></div>
@@ -86,6 +79,16 @@
         oncontextmenu="event.preventDefault()"
         tabindex="-1"
       ></canvas>
+    </div>
+
+    <div class="footer">
+      <p>
+	Built in plain C using the SDL2 library, ported to WASM with emscripten
+      </p>
+      <p>
+	Source code:
+	<a href="https://github.com/olzhasar/sdl-tetris">HERE</a>
+      </p>
     </div>
 
     <script type="text/javascript">

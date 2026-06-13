@@ -19,15 +19,20 @@ typedef enum {
 typedef struct {
   unsigned int score;
   unsigned int level;
-  // Grid is represented as m x n int matrix. Values are color indices for
-  // occupied cells or 0 for empty cells
-  int grid[GRID_WIDTH][GRID_HEIGHT];
+
+  // Grid is represented as m x n int matrix
+  // 0 denotes an empty block
+  // Occupied blocks are represented by their color indices
+  int grid[GRID_HEIGHT][GRID_WIDTH];
+
   // Array of blocks in the current shape
   // Each value pair corresponds to the shift from the shape
   // position over x and y axis
   int current_shape[8];
-  // Index of the color in the COLORS array
+
+  // The color index of the current shape
   int current_shape_kind;
+
   // Current shape coordinates
   int current_x;
   int current_y;

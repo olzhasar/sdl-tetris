@@ -206,9 +206,9 @@ void render_state(game_state_t *state) {
 
   clear_screen();
 
-  for (int i = 0; i < GRID_WIDTH; ++i) {
-    for (int j = 0; j < GRID_HEIGHT; ++j) {
-      draw_block(i, j, COLORS[state->grid[i][j]]);
+  for (int r = 0; r < GRID_HEIGHT; r++) {
+    for (int c = 0; c < GRID_WIDTH; c++) {
+      draw_block(c, r, COLORS[state->grid[r][c]]);
     }
   }
 

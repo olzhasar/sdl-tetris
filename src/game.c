@@ -16,13 +16,13 @@ static int shape_bag[N_SHAPES];
 static int shape_bag_idx = N_SHAPES - 1;
 
 // Represent shapes as arrays of 8 ints.
-// Each int pair represents the shift from the shape position over x and y axis
+// Each int pair represents the shift from the shape central position over x and y axis
 static int SHAPES[N_SHAPES][8] = {
     {0, 0, 1, 0, 0, 1, 1, 1},   // O
     {0, 0, -1, 0, 1, 0, 0, 1},  // T
     {0, 0, 0, -1, 0, 1, 1, 1},  // L
     {0, 0, 0, -1, 0, 1, -1, 1}, // J
-    {0, 0, 0, -1, 0, 1, 0, 2},  // I
+    {0, -1, 0, 0, 0, 1, 0, 2},  // I
     {0, 0, 1, 0, 0, 1, -1, 1},  // S
     {0, 0, -1, 0, 0, 1, 1, 1},  // Z
 };
@@ -85,7 +85,7 @@ void spawn_shape(game_state_t *state) {
       x = state->current_shape[i * 2] + state->current_x;
       y = state->current_shape[i * 2 + 1] + state->current_y + 1;
 
-      if (y >= 0 && state->grid[x][y] != 0) {
+      if (y >= 0 && state->grid[y][x] != 0) {
         return;
       }
     }
@@ -103,13 +103,13 @@ void restart_game(game_state_t *state) {
   spawn_shape(state);
 }
 
-void destroy_row(game_state_t *state, int row) {
-  for (int j = row; j >= 0; j--) {
-    for (int i = 0; i < GRID_WIDTH; i++) {
-      if (j > 0) {
-        state->grid[i][j] = state->grid[i][j - 1];
+void destroy_row(game_state_t *state, int target_row) {
+  for (int r = target_row; r >= 0; r--) {
+    for (int c = 0; c < GRID_WIDTH; c++) {
+      if (r > 0) {
+        state->grid[r][c] = state->grid[r - 1][c];
       } else {
-        state->grid[i][j] = 0;
+        state->grid[r][c] = 0;
       }
     }
   }
@@ -122,15 +122,15 @@ void destroy_row(game_state_t *state, int row) {
 void clean_destroyed_blocks(game_state_t *state) {
   int count = 0;
 
-  for (int j = 0; j < GRID_HEIGHT; j++) {
-    if (rows_to_destroy & (1 << j)) {
+  for (int r = 0; r < GRID_HEIGHT; r++) {
+    if (rows_to_destroy & (1 << r)) {
       count++;
 
-      rows_to_destroy ^= (1 << j);
-      for (int i = 0; i < GRID_WIDTH; i++) {
-        state->grid[i][j] = 0;
+      rows_to_destroy ^= (1 << r);
+      for (int c = 0; c < GRID_WIDTH; c++) {
+        state->grid[r][c] = 0;
       }
-      destroy_row(state, j);
+      destroy_row(state, r);
     }
   }
 
@@ -139,22 +139,22 @@ void clean_destroyed_blocks(game_state_t *state) {
   }
 }
 
-int row_is_full(game_state_t *state, int y) {
-  if (y < 0) {
+int row_is_full(game_state_t *state, int r) {
+  if (r < 0) {
     return 0;
   }
 
-  if (rows_to_destroy & (1 << y)) {
+  if (rows_to_destroy & (1 << r)) {
     return 1;
   }
 
-  for (int i = 0; i < GRID_WIDTH; i++) {
-    if (state->grid[i][y] == 0) {
+  for (int c = 0; c < GRID_WIDTH; c++) {
+    if (state->grid[r][c] == 0) {
       return 0;
     }
   }
 
-  rows_to_destroy |= (1 << y);
+  rows_to_destroy |= (1 << r);
   return 1;
 }
 
@@ -168,7 +168,7 @@ void lock_shape(game_state_t *state) {
     y = state->current_shape[i * 2 + 1] + state->current_y;
 
     if (x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT) {
-      state->grid[x][y] = state->current_shape_kind + 1;
+      state->grid[y][x] = state->current_shape_kind + 1;
     }
 
     if (row_is_full(state, y)) {
@@ -203,7 +203,7 @@ int detect_collision(game_state_t *state, int x, int y) {
     return 0;
   }
 
-  return (y >= GRID_HEIGHT || state->grid[x][y]);
+  return (y >= GRID_HEIGHT || state->grid[y][x]);
 }
 
 void rotate_shape(game_state_t *state) {
